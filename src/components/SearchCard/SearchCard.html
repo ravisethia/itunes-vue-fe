@@ -1,0 +1,11 @@
+<div class="card">
+  <img class="card-img-top" :src=item.artwork :alt=item.name />
+  <div class="card-body">
+    <h5 class="card-title">
+      <span class="title">{{item.name}}</span>
+      <favourite :item="item"></favourite>
+    </h5>
+    <p class="card-text">{{item.genre}}</p>
+    <a :href=item.url>Download on iTunes</a>
+  </div>
+</div>

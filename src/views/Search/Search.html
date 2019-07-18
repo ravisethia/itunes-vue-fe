@@ -1,0 +1,14 @@
+<div class="container">
+  <div class="main">
+    <h3 class="heading">iTunes Search</h3>
+    <form v-on:submit.prevent="sendData">
+      <search-bar v-model="search"></search-bar>
+    </form>
+    <div v-for="(items, key, index) in result" class="row">
+      <h5 class="col-12 text-capitalize category" v-if="items.length > 0">{{key}}</h5>
+      <div v-for="(item, i) in items" class="col-12 col-md-3 list-item">
+        <search-card :item="item"></search-card>
+      </div>
+    </div>
+  </div>
+</div>
