@@ -9,11 +9,11 @@
 
 <script>
 /* Adding Header component */
-import Header from './components/Header/Header.vue';
+import Header from './components/Header/Header.vue'
 export default {
-  components:{
-      'my-header': Header
-  }
+  components: {
+    'my-header': Header,
+  },
 }
 </script>
 

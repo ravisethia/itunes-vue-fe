@@ -1,7 +1,7 @@
-import Favourite from '../Favourite/Favourite.vue';
+import Favourite from '../Favourite/Favourite.vue'
 export default {
- components: {
-   'favourite': Favourite
- },
- props: ["item"]
+  components: {
+    'favourite': Favourite,
+  },
+  props: ['item'],
 }

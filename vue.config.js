@@ -9,7 +9,7 @@ module.exports = {
   configureWebpack: {
     entry: {
       app: path.resolve(__dirname, './src/main.js'),
-    }
+    },
   },
 
   chainWebpack: config => {
