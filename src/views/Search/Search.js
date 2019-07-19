@@ -41,7 +41,7 @@ export default {
     /* Custom Methods for retrieving and posting data */
     retriveData: function(data) {
       localStorage.setItem("searchTerm", data.term);
-      axios.post("http://localhost:3000/search", data)
+      axios.post("https://itunes-search-express.herokuapp.com/search", data)
         .then(resultItunes => {
           this.result = resultItunes.data;
         })
