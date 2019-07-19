@@ -4,33 +4,1841 @@
   (global = global || self, factory(global['vue-ui'] = {}));
 }(this, function (exports) { 'use strict';
 
+  // 7.1.4 ToInteger
+  var ceil = Math.ceil;
+  var floor = Math.floor;
+  var _toInteger = function (it) {
+    return isNaN(it = +it) ? 0 : (it > 0 ? floor : ceil)(it);
+  };
+
+  // 7.2.1 RequireObjectCoercible(argument)
+  var _defined = function (it) {
+    if (it == undefined) throw TypeError("Can't call method on  " + it);
+    return it;
+  };
+
+  // true  -> String#at
+  // false -> String#codePointAt
+  var _stringAt = function (TO_STRING) {
+    return function (that, pos) {
+      var s = String(_defined(that));
+      var i = _toInteger(pos);
+      var l = s.length;
+      var a, b;
+      if (i < 0 || i >= l) return TO_STRING ? '' : undefined;
+      a = s.charCodeAt(i);
+      return a < 0xd800 || a > 0xdbff || i + 1 === l || (b = s.charCodeAt(i + 1)) < 0xdc00 || b > 0xdfff
+        ? TO_STRING ? s.charAt(i) : a
+        : TO_STRING ? s.slice(i, i + 2) : (a - 0xd800 << 10) + (b - 0xdc00) + 0x10000;
+    };
+  };
+
+  var _library = true;
+
+  var commonjsGlobal = typeof globalThis !== 'undefined' ? globalThis : typeof window !== 'undefined' ? window : typeof global !== 'undefined' ? global : typeof self !== 'undefined' ? self : {};
+
+  function createCommonjsModule(fn, module) {
+  	return module = { exports: {} }, fn(module, module.exports), module.exports;
+  }
+
+  var _global = createCommonjsModule(function (module) {
+  // https://github.com/zloirock/core-js/issues/86#issuecomment-115759028
+  var global = module.exports = typeof window != 'undefined' && window.Math == Math
+    ? window : typeof self != 'undefined' && self.Math == Math ? self
+    // eslint-disable-next-line no-new-func
+    : Function('return this')();
+  if (typeof __g == 'number') __g = global; // eslint-disable-line no-undef
+  });
+
+  var _core = createCommonjsModule(function (module) {
+  var core = module.exports = { version: '2.6.9' };
+  if (typeof __e == 'number') __e = core; // eslint-disable-line no-undef
+  });
+  var _core_1 = _core.version;
+
+  var _aFunction = function (it) {
+    if (typeof it != 'function') throw TypeError(it + ' is not a function!');
+    return it;
+  };
+
+  // optional / simple context binding
+
+  var _ctx = function (fn, that, length) {
+    _aFunction(fn);
+    if (that === undefined) return fn;
+    switch (length) {
+      case 1: return function (a) {
+        return fn.call(that, a);
+      };
+      case 2: return function (a, b) {
+        return fn.call(that, a, b);
+      };
+      case 3: return function (a, b, c) {
+        return fn.call(that, a, b, c);
+      };
+    }
+    return function (/* ...args */) {
+      return fn.apply(that, arguments);
+    };
+  };
+
+  var _isObject = function (it) {
+    return typeof it === 'object' ? it !== null : typeof it === 'function';
+  };
+
+  var _anObject = function (it) {
+    if (!_isObject(it)) throw TypeError(it + ' is not an object!');
+    return it;
+  };
+
+  var _fails = function (exec) {
+    try {
+      return !!exec();
+    } catch (e) {
+      return true;
+    }
+  };
+
+  // Thank's IE8 for his funny defineProperty
+  var _descriptors = !_fails(function () {
+    return Object.defineProperty({}, 'a', { get: function () { return 7; } }).a != 7;
+  });
+
+  var document$1 = _global.document;
+  // typeof document.createElement is 'object' in old IE
+  var is = _isObject(document$1) && _isObject(document$1.createElement);
+  var _domCreate = function (it) {
+    return is ? document$1.createElement(it) : {};
+  };
+
+  var _ie8DomDefine = !_descriptors && !_fails(function () {
+    return Object.defineProperty(_domCreate('div'), 'a', { get: function () { return 7; } }).a != 7;
+  });
+
+  // 7.1.1 ToPrimitive(input [, PreferredType])
+
+  // instead of the ES6 spec version, we didn't implement @@toPrimitive case
+  // and the second argument - flag - preferred type is a string
+  var _toPrimitive = function (it, S) {
+    if (!_isObject(it)) return it;
+    var fn, val;
+    if (S && typeof (fn = it.toString) == 'function' && !_isObject(val = fn.call(it))) return val;
+    if (typeof (fn = it.valueOf) == 'function' && !_isObject(val = fn.call(it))) return val;
+    if (!S && typeof (fn = it.toString) == 'function' && !_isObject(val = fn.call(it))) return val;
+    throw TypeError("Can't convert object to primitive value");
+  };
+
+  var dP = Object.defineProperty;
+
+  var f = _descriptors ? Object.defineProperty : function defineProperty(O, P, Attributes) {
+    _anObject(O);
+    P = _toPrimitive(P, true);
+    _anObject(Attributes);
+    if (_ie8DomDefine) try {
+      return dP(O, P, Attributes);
+    } catch (e) { /* empty */ }
+    if ('get' in Attributes || 'set' in Attributes) throw TypeError('Accessors not supported!');
+    if ('value' in Attributes) O[P] = Attributes.value;
+    return O;
+  };
+
+  var _objectDp = {
+  	f: f
+  };
+
+  var _propertyDesc = function (bitmap, value) {
+    return {
+      enumerable: !(bitmap & 1),
+      configurable: !(bitmap & 2),
+      writable: !(bitmap & 4),
+      value: value
+    };
+  };
+
+  var _hide = _descriptors ? function (object, key, value) {
+    return _objectDp.f(object, key, _propertyDesc(1, value));
+  } : function (object, key, value) {
+    object[key] = value;
+    return object;
+  };
+
+  var hasOwnProperty = {}.hasOwnProperty;
+  var _has = function (it, key) {
+    return hasOwnProperty.call(it, key);
+  };
+
+  var PROTOTYPE = 'prototype';
+
+  var $export = function (type, name, source) {
+    var IS_FORCED = type & $export.F;
+    var IS_GLOBAL = type & $export.G;
+    var IS_STATIC = type & $export.S;
+    var IS_PROTO = type & $export.P;
+    var IS_BIND = type & $export.B;
+    var IS_WRAP = type & $export.W;
+    var exports = IS_GLOBAL ? _core : _core[name] || (_core[name] = {});
+    var expProto = exports[PROTOTYPE];
+    var target = IS_GLOBAL ? _global : IS_STATIC ? _global[name] : (_global[name] || {})[PROTOTYPE];
+    var key, own, out;
+    if (IS_GLOBAL) source = name;
+    for (key in source) {
+      // contains in native
+      own = !IS_FORCED && target && target[key] !== undefined;
+      if (own && _has(exports, key)) continue;
+      // export native or passed
+      out = own ? target[key] : source[key];
+      // prevent global pollution for namespaces
+      exports[key] = IS_GLOBAL && typeof target[key] != 'function' ? source[key]
+      // bind timers to global for call from export context
+      : IS_BIND && own ? _ctx(out, _global)
+      // wrap global constructors for prevent change them in library
+      : IS_WRAP && target[key] == out ? (function (C) {
+        var F = function (a, b, c) {
+          if (this instanceof C) {
+            switch (arguments.length) {
+              case 0: return new C();
+              case 1: return new C(a);
+              case 2: return new C(a, b);
+            } return new C(a, b, c);
+          } return C.apply(this, arguments);
+        };
+        F[PROTOTYPE] = C[PROTOTYPE];
+        return F;
+      // make static versions for prototype methods
+      })(out) : IS_PROTO && typeof out == 'function' ? _ctx(Function.call, out) : out;
+      // export proto methods to core.%CONSTRUCTOR%.methods.%NAME%
+      if (IS_PROTO) {
+        (exports.virtual || (exports.virtual = {}))[key] = out;
+        // export proto methods to core.%CONSTRUCTOR%.prototype.%NAME%
+        if (type & $export.R && expProto && !expProto[key]) _hide(expProto, key, out);
+      }
+    }
+  };
+  // type bitmap
+  $export.F = 1;   // forced
+  $export.G = 2;   // global
+  $export.S = 4;   // static
+  $export.P = 8;   // proto
+  $export.B = 16;  // bind
+  $export.W = 32;  // wrap
+  $export.U = 64;  // safe
+  $export.R = 128; // real proto method for `library`
+  var _export = $export;
+
+  var _redefine = _hide;
+
+  var toString = {}.toString;
+
+  var _cof = function (it) {
+    return toString.call(it).slice(8, -1);
+  };
+
+  // fallback for non-array-like ES3 and non-enumerable old V8 strings
+
+  // eslint-disable-next-line no-prototype-builtins
+  var _iobject = Object('z').propertyIsEnumerable(0) ? Object : function (it) {
+    return _cof(it) == 'String' ? it.split('') : Object(it);
+  };
+
+  // to indexed object, toObject with fallback for non-array-like ES3 strings
+
+
+  var _toIobject = function (it) {
+    return _iobject(_defined(it));
+  };
+
+  // 7.1.15 ToLength
+
+  var min = Math.min;
+  var _toLength = function (it) {
+    return it > 0 ? min(_toInteger(it), 0x1fffffffffffff) : 0; // pow(2, 53) - 1 == 9007199254740991
+  };
+
+  var max = Math.max;
+  var min$1 = Math.min;
+  var _toAbsoluteIndex = function (index, length) {
+    index = _toInteger(index);
+    return index < 0 ? max(index + length, 0) : min$1(index, length);
+  };
+
+  // false -> Array#indexOf
+  // true  -> Array#includes
+
+
+
+  var _arrayIncludes = function (IS_INCLUDES) {
+    return function ($this, el, fromIndex) {
+      var O = _toIobject($this);
+      var length = _toLength(O.length);
+      var index = _toAbsoluteIndex(fromIndex, length);
+      var value;
+      // Array#includes uses SameValueZero equality algorithm
+      // eslint-disable-next-line no-self-compare
+      if (IS_INCLUDES && el != el) while (length > index) {
+        value = O[index++];
+        // eslint-disable-next-line no-self-compare
+        if (value != value) return true;
+      // Array#indexOf ignores holes, Array#includes - not
+      } else for (;length > index; index++) if (IS_INCLUDES || index in O) {
+        if (O[index] === el) return IS_INCLUDES || index || 0;
+      } return !IS_INCLUDES && -1;
+    };
+  };
+
+  var _shared = createCommonjsModule(function (module) {
+  var SHARED = '__core-js_shared__';
+  var store = _global[SHARED] || (_global[SHARED] = {});
+
+  (module.exports = function (key, value) {
+    return store[key] || (store[key] = value !== undefined ? value : {});
+  })('versions', []).push({
+    version: _core.version,
+    mode:  'pure' ,
+    copyright: '© 2019 Denis Pushkarev (zloirock.ru)'
+  });
+  });
+
+  var id = 0;
+  var px = Math.random();
+  var _uid = function (key) {
+    return 'Symbol('.concat(key === undefined ? '' : key, ')_', (++id + px).toString(36));
+  };
+
+  var shared = _shared('keys');
+
+  var _sharedKey = function (key) {
+    return shared[key] || (shared[key] = _uid(key));
+  };
+
+  var arrayIndexOf = _arrayIncludes(false);
+  var IE_PROTO = _sharedKey('IE_PROTO');
+
+  var _objectKeysInternal = function (object, names) {
+    var O = _toIobject(object);
+    var i = 0;
+    var result = [];
+    var key;
+    for (key in O) if (key != IE_PROTO) _has(O, key) && result.push(key);
+    // Don't enum bug & hidden keys
+    while (names.length > i) if (_has(O, key = names[i++])) {
+      ~arrayIndexOf(result, key) || result.push(key);
+    }
+    return result;
+  };
+
+  // IE 8- don't enum bug keys
+  var _enumBugKeys = (
+    'constructor,hasOwnProperty,isPrototypeOf,propertyIsEnumerable,toLocaleString,toString,valueOf'
+  ).split(',');
+
+  // 19.1.2.14 / 15.2.3.14 Object.keys(O)
+
+
+
+  var _objectKeys = Object.keys || function keys(O) {
+    return _objectKeysInternal(O, _enumBugKeys);
+  };
+
+  var _objectDps = _descriptors ? Object.defineProperties : function defineProperties(O, Properties) {
+    _anObject(O);
+    var keys = _objectKeys(Properties);
+    var length = keys.length;
+    var i = 0;
+    var P;
+    while (length > i) _objectDp.f(O, P = keys[i++], Properties[P]);
+    return O;
+  };
+
+  var document$2 = _global.document;
+  var _html = document$2 && document$2.documentElement;
+
+  // 19.1.2.2 / 15.2.3.5 Object.create(O [, Properties])
+
+
+
+  var IE_PROTO$1 = _sharedKey('IE_PROTO');
+  var Empty = function () { /* empty */ };
+  var PROTOTYPE$1 = 'prototype';
+
+  // Create object with fake `null` prototype: use iframe Object with cleared prototype
+  var createDict = function () {
+    // Thrash, waste and sodomy: IE GC bug
+    var iframe = _domCreate('iframe');
+    var i = _enumBugKeys.length;
+    var lt = '<';
+    var gt = '>';
+    var iframeDocument;
+    iframe.style.display = 'none';
+    _html.appendChild(iframe);
+    iframe.src = 'javascript:'; // eslint-disable-line no-script-url
+    // createDict = iframe.contentWindow.Object;
+    // html.removeChild(iframe);
+    iframeDocument = iframe.contentWindow.document;
+    iframeDocument.open();
+    iframeDocument.write(lt + 'script' + gt + 'document.F=Object' + lt + '/script' + gt);
+    iframeDocument.close();
+    createDict = iframeDocument.F;
+    while (i--) delete createDict[PROTOTYPE$1][_enumBugKeys[i]];
+    return createDict();
+  };
+
+  var _objectCreate = Object.create || function create(O, Properties) {
+    var result;
+    if (O !== null) {
+      Empty[PROTOTYPE$1] = _anObject(O);
+      result = new Empty();
+      Empty[PROTOTYPE$1] = null;
+      // add "__proto__" for Object.getPrototypeOf polyfill
+      result[IE_PROTO$1] = O;
+    } else result = createDict();
+    return Properties === undefined ? result : _objectDps(result, Properties);
+  };
+
+  var _wks = createCommonjsModule(function (module) {
+  var store = _shared('wks');
+
+  var Symbol = _global.Symbol;
+  var USE_SYMBOL = typeof Symbol == 'function';
+
+  var $exports = module.exports = function (name) {
+    return store[name] || (store[name] =
+      USE_SYMBOL && Symbol[name] || (USE_SYMBOL ? Symbol : _uid)('Symbol.' + name));
+  };
+
+  $exports.store = store;
+  });
+
+  var def = _objectDp.f;
+
+  var TAG = _wks('toStringTag');
+
+  var _setToStringTag = function (it, tag, stat) {
+    if (it && !_has(it = stat ? it : it.prototype, TAG)) def(it, TAG, { configurable: true, value: tag });
+  };
+
+  var IteratorPrototype = {};
+
+  // 25.1.2.1.1 %IteratorPrototype%[@@iterator]()
+  _hide(IteratorPrototype, _wks('iterator'), function () { return this; });
+
+  var _iterCreate = function (Constructor, NAME, next) {
+    Constructor.prototype = _objectCreate(IteratorPrototype, { next: _propertyDesc(1, next) });
+    _setToStringTag(Constructor, NAME + ' Iterator');
+  };
+
+  // 7.1.13 ToObject(argument)
+
+  var _toObject = function (it) {
+    return Object(_defined(it));
+  };
+
+  // 19.1.2.9 / 15.2.3.2 Object.getPrototypeOf(O)
+
+
+  var IE_PROTO$2 = _sharedKey('IE_PROTO');
+  var ObjectProto = Object.prototype;
+
+  var _objectGpo = Object.getPrototypeOf || function (O) {
+    O = _toObject(O);
+    if (_has(O, IE_PROTO$2)) return O[IE_PROTO$2];
+    if (typeof O.constructor == 'function' && O instanceof O.constructor) {
+      return O.constructor.prototype;
+    } return O instanceof Object ? ObjectProto : null;
+  };
+
+  var ITERATOR = _wks('iterator');
+  var BUGGY = !([].keys && 'next' in [].keys()); // Safari has buggy iterators w/o `next`
+  var FF_ITERATOR = '@@iterator';
+  var KEYS = 'keys';
+  var VALUES = 'values';
+
+  var _iterDefine = function (Base, NAME, Constructor, next, DEFAULT, IS_SET, FORCED) {
+    _iterCreate(Constructor, NAME, next);
+    var getMethod = function (kind) {
+      if (!BUGGY && kind in proto) return proto[kind];
+      switch (kind) {
+        case KEYS: return function keys() { return new Constructor(this, kind); };
+        case VALUES: return function values() { return new Constructor(this, kind); };
+      } return function entries() { return new Constructor(this, kind); };
+    };
+    var TAG = NAME + ' Iterator';
+    var DEF_VALUES = DEFAULT == VALUES;
+    var VALUES_BUG = false;
+    var proto = Base.prototype;
+    var $native = proto[ITERATOR] || proto[FF_ITERATOR] || DEFAULT && proto[DEFAULT];
+    var $default = $native || getMethod(DEFAULT);
+    var $entries = DEFAULT ? !DEF_VALUES ? $default : getMethod('entries') : undefined;
+    var $anyNative = NAME == 'Array' ? proto.entries || $native : $native;
+    var methods, key, IteratorPrototype;
+    // Fix native
+    if ($anyNative) {
+      IteratorPrototype = _objectGpo($anyNative.call(new Base()));
+      if (IteratorPrototype !== Object.prototype && IteratorPrototype.next) {
+        // Set @@toStringTag to native iterators
+        _setToStringTag(IteratorPrototype, TAG, true);
+      }
+    }
+    // fix Array#{values, @@iterator}.name in V8 / FF
+    if (DEF_VALUES && $native && $native.name !== VALUES) {
+      VALUES_BUG = true;
+      $default = function values() { return $native.call(this); };
+    }
+    // Define iterator
+    if (( FORCED) && (BUGGY || VALUES_BUG || !proto[ITERATOR])) {
+      _hide(proto, ITERATOR, $default);
+    }
+    if (DEFAULT) {
+      methods = {
+        values: DEF_VALUES ? $default : getMethod(VALUES),
+        keys: IS_SET ? $default : getMethod(KEYS),
+        entries: $entries
+      };
+      if (FORCED) for (key in methods) {
+        if (!(key in proto)) _redefine(proto, key, methods[key]);
+      } else _export(_export.P + _export.F * (BUGGY || VALUES_BUG), NAME, methods);
+    }
+    return methods;
+  };
+
+  var $at = _stringAt(true);
+
+  // 21.1.3.27 String.prototype[@@iterator]()
+  _iterDefine(String, 'String', function (iterated) {
+    this._t = String(iterated); // target
+    this._i = 0;                // next index
+  // 21.1.5.2.1 %StringIteratorPrototype%.next()
+  }, function () {
+    var O = this._t;
+    var index = this._i;
+    var point;
+    if (index >= O.length) return { value: undefined, done: true };
+    point = $at(O, index);
+    this._i += point.length;
+    return { value: point, done: false };
+  });
+
+  var _iterStep = function (done, value) {
+    return { value: value, done: !!done };
+  };
+
+  // 22.1.3.4 Array.prototype.entries()
+  // 22.1.3.13 Array.prototype.keys()
+  // 22.1.3.29 Array.prototype.values()
+  // 22.1.3.30 Array.prototype[@@iterator]()
+  var es6_array_iterator = _iterDefine(Array, 'Array', function (iterated, kind) {
+    this._t = _toIobject(iterated); // target
+    this._i = 0;                   // next index
+    this._k = kind;                // kind
+  // 22.1.5.2.1 %ArrayIteratorPrototype%.next()
+  }, function () {
+    var O = this._t;
+    var kind = this._k;
+    var index = this._i++;
+    if (!O || index >= O.length) {
+      this._t = undefined;
+      return _iterStep(1);
+    }
+    if (kind == 'keys') return _iterStep(0, index);
+    if (kind == 'values') return _iterStep(0, O[index]);
+    return _iterStep(0, [index, O[index]]);
+  }, 'values');
+
+  var TO_STRING_TAG = _wks('toStringTag');
+
+  var DOMIterables = ('CSSRuleList,CSSStyleDeclaration,CSSValueList,ClientRectList,DOMRectList,DOMStringList,' +
+    'DOMTokenList,DataTransferItemList,FileList,HTMLAllCollection,HTMLCollection,HTMLFormElement,HTMLSelectElement,' +
+    'MediaList,MimeTypeArray,NamedNodeMap,NodeList,PaintRequestList,Plugin,PluginArray,SVGLengthList,SVGNumberList,' +
+    'SVGPathSegList,SVGPointList,SVGStringList,SVGTransformList,SourceBufferList,StyleSheetList,TextTrackCueList,' +
+    'TextTrackList,TouchList').split(',');
+
+  for (var i = 0; i < DOMIterables.length; i++) {
+    var NAME = DOMIterables[i];
+    var Collection = _global[NAME];
+    var proto = Collection && Collection.prototype;
+    if (proto && !proto[TO_STRING_TAG]) _hide(proto, TO_STRING_TAG, NAME);
+  }
+
+  var f$1 = _wks;
+
+  var _wksExt = {
+  	f: f$1
+  };
+
+  var iterator = _wksExt.f('iterator');
+
+  var iterator$1 = iterator;
+
+  var _meta = createCommonjsModule(function (module) {
+  var META = _uid('meta');
+
+
+  var setDesc = _objectDp.f;
+  var id = 0;
+  var isExtensible = Object.isExtensible || function () {
+    return true;
+  };
+  var FREEZE = !_fails(function () {
+    return isExtensible(Object.preventExtensions({}));
+  });
+  var setMeta = function (it) {
+    setDesc(it, META, { value: {
+      i: 'O' + ++id, // object ID
+      w: {}          // weak collections IDs
+    } });
+  };
+  var fastKey = function (it, create) {
+    // return primitive with prefix
+    if (!_isObject(it)) return typeof it == 'symbol' ? it : (typeof it == 'string' ? 'S' : 'P') + it;
+    if (!_has(it, META)) {
+      // can't set metadata to uncaught frozen object
+      if (!isExtensible(it)) return 'F';
+      // not necessary to add metadata
+      if (!create) return 'E';
+      // add missing metadata
+      setMeta(it);
+    // return object ID
+    } return it[META].i;
+  };
+  var getWeak = function (it, create) {
+    if (!_has(it, META)) {
+      // can't set metadata to uncaught frozen object
+      if (!isExtensible(it)) return true;
+      // not necessary to add metadata
+      if (!create) return false;
+      // add missing metadata
+      setMeta(it);
+    // return hash weak collections IDs
+    } return it[META].w;
+  };
+  // add metadata on freeze-family methods calling
+  var onFreeze = function (it) {
+    if (FREEZE && meta.NEED && isExtensible(it) && !_has(it, META)) setMeta(it);
+    return it;
+  };
+  var meta = module.exports = {
+    KEY: META,
+    NEED: false,
+    fastKey: fastKey,
+    getWeak: getWeak,
+    onFreeze: onFreeze
+  };
+  });
+  var _meta_1 = _meta.KEY;
+  var _meta_2 = _meta.NEED;
+  var _meta_3 = _meta.fastKey;
+  var _meta_4 = _meta.getWeak;
+  var _meta_5 = _meta.onFreeze;
+
+  var defineProperty = _objectDp.f;
+  var _wksDefine = function (name) {
+    var $Symbol = _core.Symbol || (_core.Symbol =  {} );
+    if (name.charAt(0) != '_' && !(name in $Symbol)) defineProperty($Symbol, name, { value: _wksExt.f(name) });
+  };
+
+  var f$2 = Object.getOwnPropertySymbols;
+
+  var _objectGops = {
+  	f: f$2
+  };
+
+  var f$3 = {}.propertyIsEnumerable;
+
+  var _objectPie = {
+  	f: f$3
+  };
+
+  // all enumerable object keys, includes symbols
+
+
+
+  var _enumKeys = function (it) {
+    var result = _objectKeys(it);
+    var getSymbols = _objectGops.f;
+    if (getSymbols) {
+      var symbols = getSymbols(it);
+      var isEnum = _objectPie.f;
+      var i = 0;
+      var key;
+      while (symbols.length > i) if (isEnum.call(it, key = symbols[i++])) result.push(key);
+    } return result;
+  };
+
+  // 7.2.2 IsArray(argument)
+
+  var _isArray = Array.isArray || function isArray(arg) {
+    return _cof(arg) == 'Array';
+  };
+
+  // 19.1.2.7 / 15.2.3.4 Object.getOwnPropertyNames(O)
+
+  var hiddenKeys = _enumBugKeys.concat('length', 'prototype');
+
+  var f$4 = Object.getOwnPropertyNames || function getOwnPropertyNames(O) {
+    return _objectKeysInternal(O, hiddenKeys);
+  };
+
+  var _objectGopn = {
+  	f: f$4
+  };
+
+  // fallback for IE11 buggy Object.getOwnPropertyNames with iframe and window
+
+  var gOPN = _objectGopn.f;
+  var toString$1 = {}.toString;
+
+  var windowNames = typeof window == 'object' && window && Object.getOwnPropertyNames
+    ? Object.getOwnPropertyNames(window) : [];
+
+  var getWindowNames = function (it) {
+    try {
+      return gOPN(it);
+    } catch (e) {
+      return windowNames.slice();
+    }
+  };
+
+  var f$5 = function getOwnPropertyNames(it) {
+    return windowNames && toString$1.call(it) == '[object Window]' ? getWindowNames(it) : gOPN(_toIobject(it));
+  };
+
+  var _objectGopnExt = {
+  	f: f$5
+  };
+
+  var gOPD = Object.getOwnPropertyDescriptor;
+
+  var f$6 = _descriptors ? gOPD : function getOwnPropertyDescriptor(O, P) {
+    O = _toIobject(O);
+    P = _toPrimitive(P, true);
+    if (_ie8DomDefine) try {
+      return gOPD(O, P);
+    } catch (e) { /* empty */ }
+    if (_has(O, P)) return _propertyDesc(!_objectPie.f.call(O, P), O[P]);
+  };
+
+  var _objectGopd = {
+  	f: f$6
+  };
+
+  // ECMAScript 6 symbols shim
+
+
+
+
+
+  var META = _meta.KEY;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  var gOPD$1 = _objectGopd.f;
+  var dP$1 = _objectDp.f;
+  var gOPN$1 = _objectGopnExt.f;
+  var $Symbol = _global.Symbol;
+  var $JSON = _global.JSON;
+  var _stringify = $JSON && $JSON.stringify;
+  var PROTOTYPE$2 = 'prototype';
+  var HIDDEN = _wks('_hidden');
+  var TO_PRIMITIVE = _wks('toPrimitive');
+  var isEnum = {}.propertyIsEnumerable;
+  var SymbolRegistry = _shared('symbol-registry');
+  var AllSymbols = _shared('symbols');
+  var OPSymbols = _shared('op-symbols');
+  var ObjectProto$1 = Object[PROTOTYPE$2];
+  var USE_NATIVE = typeof $Symbol == 'function' && !!_objectGops.f;
+  var QObject = _global.QObject;
+  // Don't use setters in Qt Script, https://github.com/zloirock/core-js/issues/173
+  var setter = !QObject || !QObject[PROTOTYPE$2] || !QObject[PROTOTYPE$2].findChild;
+
+  // fallback for old Android, https://code.google.com/p/v8/issues/detail?id=687
+  var setSymbolDesc = _descriptors && _fails(function () {
+    return _objectCreate(dP$1({}, 'a', {
+      get: function () { return dP$1(this, 'a', { value: 7 }).a; }
+    })).a != 7;
+  }) ? function (it, key, D) {
+    var protoDesc = gOPD$1(ObjectProto$1, key);
+    if (protoDesc) delete ObjectProto$1[key];
+    dP$1(it, key, D);
+    if (protoDesc && it !== ObjectProto$1) dP$1(ObjectProto$1, key, protoDesc);
+  } : dP$1;
+
+  var wrap = function (tag) {
+    var sym = AllSymbols[tag] = _objectCreate($Symbol[PROTOTYPE$2]);
+    sym._k = tag;
+    return sym;
+  };
+
+  var isSymbol = USE_NATIVE && typeof $Symbol.iterator == 'symbol' ? function (it) {
+    return typeof it == 'symbol';
+  } : function (it) {
+    return it instanceof $Symbol;
+  };
+
+  var $defineProperty = function defineProperty(it, key, D) {
+    if (it === ObjectProto$1) $defineProperty(OPSymbols, key, D);
+    _anObject(it);
+    key = _toPrimitive(key, true);
+    _anObject(D);
+    if (_has(AllSymbols, key)) {
+      if (!D.enumerable) {
+        if (!_has(it, HIDDEN)) dP$1(it, HIDDEN, _propertyDesc(1, {}));
+        it[HIDDEN][key] = true;
+      } else {
+        if (_has(it, HIDDEN) && it[HIDDEN][key]) it[HIDDEN][key] = false;
+        D = _objectCreate(D, { enumerable: _propertyDesc(0, false) });
+      } return setSymbolDesc(it, key, D);
+    } return dP$1(it, key, D);
+  };
+  var $defineProperties = function defineProperties(it, P) {
+    _anObject(it);
+    var keys = _enumKeys(P = _toIobject(P));
+    var i = 0;
+    var l = keys.length;
+    var key;
+    while (l > i) $defineProperty(it, key = keys[i++], P[key]);
+    return it;
+  };
+  var $create = function create(it, P) {
+    return P === undefined ? _objectCreate(it) : $defineProperties(_objectCreate(it), P);
+  };
+  var $propertyIsEnumerable = function propertyIsEnumerable(key) {
+    var E = isEnum.call(this, key = _toPrimitive(key, true));
+    if (this === ObjectProto$1 && _has(AllSymbols, key) && !_has(OPSymbols, key)) return false;
+    return E || !_has(this, key) || !_has(AllSymbols, key) || _has(this, HIDDEN) && this[HIDDEN][key] ? E : true;
+  };
+  var $getOwnPropertyDescriptor = function getOwnPropertyDescriptor(it, key) {
+    it = _toIobject(it);
+    key = _toPrimitive(key, true);
+    if (it === ObjectProto$1 && _has(AllSymbols, key) && !_has(OPSymbols, key)) return;
+    var D = gOPD$1(it, key);
+    if (D && _has(AllSymbols, key) && !(_has(it, HIDDEN) && it[HIDDEN][key])) D.enumerable = true;
+    return D;
+  };
+  var $getOwnPropertyNames = function getOwnPropertyNames(it) {
+    var names = gOPN$1(_toIobject(it));
+    var result = [];
+    var i = 0;
+    var key;
+    while (names.length > i) {
+      if (!_has(AllSymbols, key = names[i++]) && key != HIDDEN && key != META) result.push(key);
+    } return result;
+  };
+  var $getOwnPropertySymbols = function getOwnPropertySymbols(it) {
+    var IS_OP = it === ObjectProto$1;
+    var names = gOPN$1(IS_OP ? OPSymbols : _toIobject(it));
+    var result = [];
+    var i = 0;
+    var key;
+    while (names.length > i) {
+      if (_has(AllSymbols, key = names[i++]) && (IS_OP ? _has(ObjectProto$1, key) : true)) result.push(AllSymbols[key]);
+    } return result;
+  };
+
+  // 19.4.1.1 Symbol([description])
+  if (!USE_NATIVE) {
+    $Symbol = function Symbol() {
+      if (this instanceof $Symbol) throw TypeError('Symbol is not a constructor!');
+      var tag = _uid(arguments.length > 0 ? arguments[0] : undefined);
+      var $set = function (value) {
+        if (this === ObjectProto$1) $set.call(OPSymbols, value);
+        if (_has(this, HIDDEN) && _has(this[HIDDEN], tag)) this[HIDDEN][tag] = false;
+        setSymbolDesc(this, tag, _propertyDesc(1, value));
+      };
+      if (_descriptors && setter) setSymbolDesc(ObjectProto$1, tag, { configurable: true, set: $set });
+      return wrap(tag);
+    };
+    _redefine($Symbol[PROTOTYPE$2], 'toString', function toString() {
+      return this._k;
+    });
+
+    _objectGopd.f = $getOwnPropertyDescriptor;
+    _objectDp.f = $defineProperty;
+    _objectGopn.f = _objectGopnExt.f = $getOwnPropertyNames;
+    _objectPie.f = $propertyIsEnumerable;
+    _objectGops.f = $getOwnPropertySymbols;
+
+    if (_descriptors && !_library) {
+      _redefine(ObjectProto$1, 'propertyIsEnumerable', $propertyIsEnumerable, true);
+    }
+
+    _wksExt.f = function (name) {
+      return wrap(_wks(name));
+    };
+  }
+
+  _export(_export.G + _export.W + _export.F * !USE_NATIVE, { Symbol: $Symbol });
+
+  for (var es6Symbols = (
+    // 19.4.2.2, 19.4.2.3, 19.4.2.4, 19.4.2.6, 19.4.2.8, 19.4.2.9, 19.4.2.10, 19.4.2.11, 19.4.2.12, 19.4.2.13, 19.4.2.14
+    'hasInstance,isConcatSpreadable,iterator,match,replace,search,species,split,toPrimitive,toStringTag,unscopables'
+  ).split(','), j = 0; es6Symbols.length > j;)_wks(es6Symbols[j++]);
+
+  for (var wellKnownSymbols = _objectKeys(_wks.store), k = 0; wellKnownSymbols.length > k;) _wksDefine(wellKnownSymbols[k++]);
+
+  _export(_export.S + _export.F * !USE_NATIVE, 'Symbol', {
+    // 19.4.2.1 Symbol.for(key)
+    'for': function (key) {
+      return _has(SymbolRegistry, key += '')
+        ? SymbolRegistry[key]
+        : SymbolRegistry[key] = $Symbol(key);
+    },
+    // 19.4.2.5 Symbol.keyFor(sym)
+    keyFor: function keyFor(sym) {
+      if (!isSymbol(sym)) throw TypeError(sym + ' is not a symbol!');
+      for (var key in SymbolRegistry) if (SymbolRegistry[key] === sym) return key;
+    },
+    useSetter: function () { setter = true; },
+    useSimple: function () { setter = false; }
+  });
+
+  _export(_export.S + _export.F * !USE_NATIVE, 'Object', {
+    // 19.1.2.2 Object.create(O [, Properties])
+    create: $create,
+    // 19.1.2.4 Object.defineProperty(O, P, Attributes)
+    defineProperty: $defineProperty,
+    // 19.1.2.3 Object.defineProperties(O, Properties)
+    defineProperties: $defineProperties,
+    // 19.1.2.6 Object.getOwnPropertyDescriptor(O, P)
+    getOwnPropertyDescriptor: $getOwnPropertyDescriptor,
+    // 19.1.2.7 Object.getOwnPropertyNames(O)
+    getOwnPropertyNames: $getOwnPropertyNames,
+    // 19.1.2.8 Object.getOwnPropertySymbols(O)
+    getOwnPropertySymbols: $getOwnPropertySymbols
+  });
+
+  // Chrome 38 and 39 `Object.getOwnPropertySymbols` fails on primitives
+  // https://bugs.chromium.org/p/v8/issues/detail?id=3443
+  var FAILS_ON_PRIMITIVES = _fails(function () { _objectGops.f(1); });
+
+  _export(_export.S + _export.F * FAILS_ON_PRIMITIVES, 'Object', {
+    getOwnPropertySymbols: function getOwnPropertySymbols(it) {
+      return _objectGops.f(_toObject(it));
+    }
+  });
+
+  // 24.3.2 JSON.stringify(value [, replacer [, space]])
+  $JSON && _export(_export.S + _export.F * (!USE_NATIVE || _fails(function () {
+    var S = $Symbol();
+    // MS Edge converts symbol values to JSON as {}
+    // WebKit converts symbol values to JSON as null
+    // V8 throws on boxed symbols
+    return _stringify([S]) != '[null]' || _stringify({ a: S }) != '{}' || _stringify(Object(S)) != '{}';
+  })), 'JSON', {
+    stringify: function stringify(it) {
+      var args = [it];
+      var i = 1;
+      var replacer, $replacer;
+      while (arguments.length > i) args.push(arguments[i++]);
+      $replacer = replacer = args[1];
+      if (!_isObject(replacer) && it === undefined || isSymbol(it)) return; // IE8 returns string on undefined
+      if (!_isArray(replacer)) replacer = function (key, value) {
+        if (typeof $replacer == 'function') value = $replacer.call(this, key, value);
+        if (!isSymbol(value)) return value;
+      };
+      args[1] = replacer;
+      return _stringify.apply($JSON, args);
+    }
+  });
+
+  // 19.4.3.4 Symbol.prototype[@@toPrimitive](hint)
+  $Symbol[PROTOTYPE$2][TO_PRIMITIVE] || _hide($Symbol[PROTOTYPE$2], TO_PRIMITIVE, $Symbol[PROTOTYPE$2].valueOf);
+  // 19.4.3.5 Symbol.prototype[@@toStringTag]
+  _setToStringTag($Symbol, 'Symbol');
+  // 20.2.1.9 Math[@@toStringTag]
+  _setToStringTag(Math, 'Math', true);
+  // 24.3.3 JSON[@@toStringTag]
+  _setToStringTag(_global.JSON, 'JSON', true);
+
+  _wksDefine('asyncIterator');
+
+  _wksDefine('observable');
+
+  var symbol = _core.Symbol;
+
+  var symbol$1 = symbol;
+
+  function _typeof2(obj) { if (typeof symbol$1 === "function" && typeof iterator$1 === "symbol") { _typeof2 = function _typeof2(obj) { return typeof obj; }; } else { _typeof2 = function _typeof2(obj) { return obj && typeof symbol$1 === "function" && obj.constructor === symbol$1 && obj !== symbol$1.prototype ? "symbol" : typeof obj; }; } return _typeof2(obj); }
+
   function _typeof(obj) {
-    if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") {
-      _typeof = function (obj) {
-        return typeof obj;
+    if (typeof symbol$1 === "function" && _typeof2(iterator$1) === "symbol") {
+      _typeof = function _typeof(obj) {
+        return _typeof2(obj);
       };
     } else {
-      _typeof = function (obj) {
-        return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj;
+      _typeof = function _typeof(obj) {
+        return obj && typeof symbol$1 === "function" && obj.constructor === symbol$1 && obj !== symbol$1.prototype ? "symbol" : _typeof2(obj);
       };
     }
 
     return _typeof(obj);
   }
 
-  function _defineProperty(obj, key, value) {
-    if (key in obj) {
-      Object.defineProperty(obj, key, {
-        value: value,
-        enumerable: true,
-        configurable: true,
-        writable: true
-      });
-    } else {
-      obj[key] = value;
-    }
+  var _isObject$1 = function (it) {
+    return typeof it === 'object' ? it !== null : typeof it === 'function';
+  };
 
-    return obj;
+  var _anObject$1 = function (it) {
+    if (!_isObject$1(it)) throw TypeError(it + ' is not an object!');
+    return it;
+  };
+
+  // 7.1.4 ToInteger
+  var ceil$1 = Math.ceil;
+  var floor$1 = Math.floor;
+  var _toInteger$1 = function (it) {
+    return isNaN(it = +it) ? 0 : (it > 0 ? floor$1 : ceil$1)(it);
+  };
+
+  // 7.1.15 ToLength
+
+  var min$2 = Math.min;
+  var _toLength$1 = function (it) {
+    return it > 0 ? min$2(_toInteger$1(it), 0x1fffffffffffff) : 0; // pow(2, 53) - 1 == 9007199254740991
+  };
+
+  // 7.2.1 RequireObjectCoercible(argument)
+  var _defined$1 = function (it) {
+    if (it == undefined) throw TypeError("Can't call method on  " + it);
+    return it;
+  };
+
+  // true  -> String#at
+  // false -> String#codePointAt
+  var _stringAt$1 = function (TO_STRING) {
+    return function (that, pos) {
+      var s = String(_defined$1(that));
+      var i = _toInteger$1(pos);
+      var l = s.length;
+      var a, b;
+      if (i < 0 || i >= l) return TO_STRING ? '' : undefined;
+      a = s.charCodeAt(i);
+      return a < 0xd800 || a > 0xdbff || i + 1 === l || (b = s.charCodeAt(i + 1)) < 0xdc00 || b > 0xdfff
+        ? TO_STRING ? s.charAt(i) : a
+        : TO_STRING ? s.slice(i, i + 2) : (a - 0xd800 << 10) + (b - 0xdc00) + 0x10000;
+    };
+  };
+
+  var at = _stringAt$1(true);
+
+   // `AdvanceStringIndex` abstract operation
+  // https://tc39.github.io/ecma262/#sec-advancestringindex
+  var _advanceStringIndex = function (S, index, unicode) {
+    return index + (unicode ? at(S, index).length : 1);
+  };
+
+  var toString$2 = {}.toString;
+
+  var _cof$1 = function (it) {
+    return toString$2.call(it).slice(8, -1);
+  };
+
+  var _core$1 = createCommonjsModule(function (module) {
+  var core = module.exports = { version: '2.6.9' };
+  if (typeof __e == 'number') __e = core; // eslint-disable-line no-undef
+  });
+  var _core_1$1 = _core$1.version;
+
+  var _global$1 = createCommonjsModule(function (module) {
+  // https://github.com/zloirock/core-js/issues/86#issuecomment-115759028
+  var global = module.exports = typeof window != 'undefined' && window.Math == Math
+    ? window : typeof self != 'undefined' && self.Math == Math ? self
+    // eslint-disable-next-line no-new-func
+    : Function('return this')();
+  if (typeof __g == 'number') __g = global; // eslint-disable-line no-undef
+  });
+
+  var _shared$1 = createCommonjsModule(function (module) {
+  var SHARED = '__core-js_shared__';
+  var store = _global$1[SHARED] || (_global$1[SHARED] = {});
+
+  (module.exports = function (key, value) {
+    return store[key] || (store[key] = value !== undefined ? value : {});
+  })('versions', []).push({
+    version: _core$1.version,
+    mode:  'global',
+    copyright: '© 2019 Denis Pushkarev (zloirock.ru)'
+  });
+  });
+
+  var id$1 = 0;
+  var px$1 = Math.random();
+  var _uid$1 = function (key) {
+    return 'Symbol('.concat(key === undefined ? '' : key, ')_', (++id$1 + px$1).toString(36));
+  };
+
+  var _wks$1 = createCommonjsModule(function (module) {
+  var store = _shared$1('wks');
+
+  var Symbol = _global$1.Symbol;
+  var USE_SYMBOL = typeof Symbol == 'function';
+
+  var $exports = module.exports = function (name) {
+    return store[name] || (store[name] =
+      USE_SYMBOL && Symbol[name] || (USE_SYMBOL ? Symbol : _uid$1)('Symbol.' + name));
+  };
+
+  $exports.store = store;
+  });
+
+  // getting tag from 19.1.3.6 Object.prototype.toString()
+
+  var TAG$1 = _wks$1('toStringTag');
+  // ES3 wrong here
+  var ARG = _cof$1(function () { return arguments; }()) == 'Arguments';
+
+  // fallback for IE11 Script Access Denied error
+  var tryGet = function (it, key) {
+    try {
+      return it[key];
+    } catch (e) { /* empty */ }
+  };
+
+  var _classof = function (it) {
+    var O, T, B;
+    return it === undefined ? 'Undefined' : it === null ? 'Null'
+      // @@toStringTag case
+      : typeof (T = tryGet(O = Object(it), TAG$1)) == 'string' ? T
+      // builtinTag case
+      : ARG ? _cof$1(O)
+      // ES3 arguments fallback
+      : (B = _cof$1(O)) == 'Object' && typeof O.callee == 'function' ? 'Arguments' : B;
+  };
+
+  var builtinExec = RegExp.prototype.exec;
+
+   // `RegExpExec` abstract operation
+  // https://tc39.github.io/ecma262/#sec-regexpexec
+  var _regexpExecAbstract = function (R, S) {
+    var exec = R.exec;
+    if (typeof exec === 'function') {
+      var result = exec.call(R, S);
+      if (typeof result !== 'object') {
+        throw new TypeError('RegExp exec method returned something other than an Object or null');
+      }
+      return result;
+    }
+    if (_classof(R) !== 'RegExp') {
+      throw new TypeError('RegExp#exec called on incompatible receiver');
+    }
+    return builtinExec.call(R, S);
+  };
+
+  // 21.2.5.3 get RegExp.prototype.flags
+
+  var _flags = function () {
+    var that = _anObject$1(this);
+    var result = '';
+    if (that.global) result += 'g';
+    if (that.ignoreCase) result += 'i';
+    if (that.multiline) result += 'm';
+    if (that.unicode) result += 'u';
+    if (that.sticky) result += 'y';
+    return result;
+  };
+
+  var nativeExec = RegExp.prototype.exec;
+  // This always refers to the native implementation, because the
+  // String#replace polyfill uses ./fix-regexp-well-known-symbol-logic.js,
+  // which loads this file before patching the method.
+  var nativeReplace = String.prototype.replace;
+
+  var patchedExec = nativeExec;
+
+  var LAST_INDEX = 'lastIndex';
+
+  var UPDATES_LAST_INDEX_WRONG = (function () {
+    var re1 = /a/,
+        re2 = /b*/g;
+    nativeExec.call(re1, 'a');
+    nativeExec.call(re2, 'a');
+    return re1[LAST_INDEX] !== 0 || re2[LAST_INDEX] !== 0;
+  })();
+
+  // nonparticipating capturing group, copied from es5-shim's String#split patch.
+  var NPCG_INCLUDED = /()??/.exec('')[1] !== undefined;
+
+  var PATCH = UPDATES_LAST_INDEX_WRONG || NPCG_INCLUDED;
+
+  if (PATCH) {
+    patchedExec = function exec(str) {
+      var re = this;
+      var lastIndex, reCopy, match, i;
+
+      if (NPCG_INCLUDED) {
+        reCopy = new RegExp('^' + re.source + '$(?!\\s)', _flags.call(re));
+      }
+      if (UPDATES_LAST_INDEX_WRONG) lastIndex = re[LAST_INDEX];
+
+      match = nativeExec.call(re, str);
+
+      if (UPDATES_LAST_INDEX_WRONG && match) {
+        re[LAST_INDEX] = re.global ? match.index + match[0].length : lastIndex;
+      }
+      if (NPCG_INCLUDED && match && match.length > 1) {
+        // Fix browsers whose `exec` methods don't consistently return `undefined`
+        // for NPCG, like IE8. NOTE: This doesn' work for /(.?)?/
+        // eslint-disable-next-line no-loop-func
+        nativeReplace.call(match[0], reCopy, function () {
+          for (i = 1; i < arguments.length - 2; i++) {
+            if (arguments[i] === undefined) match[i] = undefined;
+          }
+        });
+      }
+
+      return match;
+    };
+  }
+
+  var _regexpExec = patchedExec;
+
+  var _fails$1 = function (exec) {
+    try {
+      return !!exec();
+    } catch (e) {
+      return true;
+    }
+  };
+
+  // Thank's IE8 for his funny defineProperty
+  var _descriptors$1 = !_fails$1(function () {
+    return Object.defineProperty({}, 'a', { get: function () { return 7; } }).a != 7;
+  });
+
+  var document$3 = _global$1.document;
+  // typeof document.createElement is 'object' in old IE
+  var is$1 = _isObject$1(document$3) && _isObject$1(document$3.createElement);
+  var _domCreate$1 = function (it) {
+    return is$1 ? document$3.createElement(it) : {};
+  };
+
+  var _ie8DomDefine$1 = !_descriptors$1 && !_fails$1(function () {
+    return Object.defineProperty(_domCreate$1('div'), 'a', { get: function () { return 7; } }).a != 7;
+  });
+
+  // 7.1.1 ToPrimitive(input [, PreferredType])
+
+  // instead of the ES6 spec version, we didn't implement @@toPrimitive case
+  // and the second argument - flag - preferred type is a string
+  var _toPrimitive$1 = function (it, S) {
+    if (!_isObject$1(it)) return it;
+    var fn, val;
+    if (S && typeof (fn = it.toString) == 'function' && !_isObject$1(val = fn.call(it))) return val;
+    if (typeof (fn = it.valueOf) == 'function' && !_isObject$1(val = fn.call(it))) return val;
+    if (!S && typeof (fn = it.toString) == 'function' && !_isObject$1(val = fn.call(it))) return val;
+    throw TypeError("Can't convert object to primitive value");
+  };
+
+  var dP$2 = Object.defineProperty;
+
+  var f$7 = _descriptors$1 ? Object.defineProperty : function defineProperty(O, P, Attributes) {
+    _anObject$1(O);
+    P = _toPrimitive$1(P, true);
+    _anObject$1(Attributes);
+    if (_ie8DomDefine$1) try {
+      return dP$2(O, P, Attributes);
+    } catch (e) { /* empty */ }
+    if ('get' in Attributes || 'set' in Attributes) throw TypeError('Accessors not supported!');
+    if ('value' in Attributes) O[P] = Attributes.value;
+    return O;
+  };
+
+  var _objectDp$1 = {
+  	f: f$7
+  };
+
+  var _propertyDesc$1 = function (bitmap, value) {
+    return {
+      enumerable: !(bitmap & 1),
+      configurable: !(bitmap & 2),
+      writable: !(bitmap & 4),
+      value: value
+    };
+  };
+
+  var _hide$1 = _descriptors$1 ? function (object, key, value) {
+    return _objectDp$1.f(object, key, _propertyDesc$1(1, value));
+  } : function (object, key, value) {
+    object[key] = value;
+    return object;
+  };
+
+  var hasOwnProperty$1 = {}.hasOwnProperty;
+  var _has$1 = function (it, key) {
+    return hasOwnProperty$1.call(it, key);
+  };
+
+  var _functionToString = _shared$1('native-function-to-string', Function.toString);
+
+  var _redefine$1 = createCommonjsModule(function (module) {
+  var SRC = _uid$1('src');
+
+  var TO_STRING = 'toString';
+  var TPL = ('' + _functionToString).split(TO_STRING);
+
+  _core$1.inspectSource = function (it) {
+    return _functionToString.call(it);
+  };
+
+  (module.exports = function (O, key, val, safe) {
+    var isFunction = typeof val == 'function';
+    if (isFunction) _has$1(val, 'name') || _hide$1(val, 'name', key);
+    if (O[key] === val) return;
+    if (isFunction) _has$1(val, SRC) || _hide$1(val, SRC, O[key] ? '' + O[key] : TPL.join(String(key)));
+    if (O === _global$1) {
+      O[key] = val;
+    } else if (!safe) {
+      delete O[key];
+      _hide$1(O, key, val);
+    } else if (O[key]) {
+      O[key] = val;
+    } else {
+      _hide$1(O, key, val);
+    }
+  // add fake Function#toString for correct work wrapped methods / constructors with methods like LoDash isNative
+  })(Function.prototype, TO_STRING, function toString() {
+    return typeof this == 'function' && this[SRC] || _functionToString.call(this);
+  });
+  });
+
+  var _aFunction$1 = function (it) {
+    if (typeof it != 'function') throw TypeError(it + ' is not a function!');
+    return it;
+  };
+
+  // optional / simple context binding
+
+  var _ctx$1 = function (fn, that, length) {
+    _aFunction$1(fn);
+    if (that === undefined) return fn;
+    switch (length) {
+      case 1: return function (a) {
+        return fn.call(that, a);
+      };
+      case 2: return function (a, b) {
+        return fn.call(that, a, b);
+      };
+      case 3: return function (a, b, c) {
+        return fn.call(that, a, b, c);
+      };
+    }
+    return function (/* ...args */) {
+      return fn.apply(that, arguments);
+    };
+  };
+
+  var PROTOTYPE$3 = 'prototype';
+
+  var $export$1 = function (type, name, source) {
+    var IS_FORCED = type & $export$1.F;
+    var IS_GLOBAL = type & $export$1.G;
+    var IS_STATIC = type & $export$1.S;
+    var IS_PROTO = type & $export$1.P;
+    var IS_BIND = type & $export$1.B;
+    var target = IS_GLOBAL ? _global$1 : IS_STATIC ? _global$1[name] || (_global$1[name] = {}) : (_global$1[name] || {})[PROTOTYPE$3];
+    var exports = IS_GLOBAL ? _core$1 : _core$1[name] || (_core$1[name] = {});
+    var expProto = exports[PROTOTYPE$3] || (exports[PROTOTYPE$3] = {});
+    var key, own, out, exp;
+    if (IS_GLOBAL) source = name;
+    for (key in source) {
+      // contains in native
+      own = !IS_FORCED && target && target[key] !== undefined;
+      // export native or passed
+      out = (own ? target : source)[key];
+      // bind timers to global for call from export context
+      exp = IS_BIND && own ? _ctx$1(out, _global$1) : IS_PROTO && typeof out == 'function' ? _ctx$1(Function.call, out) : out;
+      // extend global
+      if (target) _redefine$1(target, key, out, type & $export$1.U);
+      // export
+      if (exports[key] != out) _hide$1(exports, key, exp);
+      if (IS_PROTO && expProto[key] != out) expProto[key] = out;
+    }
+  };
+  _global$1.core = _core$1;
+  // type bitmap
+  $export$1.F = 1;   // forced
+  $export$1.G = 2;   // global
+  $export$1.S = 4;   // static
+  $export$1.P = 8;   // proto
+  $export$1.B = 16;  // bind
+  $export$1.W = 32;  // wrap
+  $export$1.U = 64;  // safe
+  $export$1.R = 128; // real proto method for `library`
+  var _export$1 = $export$1;
+
+  _export$1({
+    target: 'RegExp',
+    proto: true,
+    forced: _regexpExec !== /./.exec
+  }, {
+    exec: _regexpExec
+  });
+
+  var SPECIES = _wks$1('species');
+
+  var REPLACE_SUPPORTS_NAMED_GROUPS = !_fails$1(function () {
+    // #replace needs built-in support for named groups.
+    // #match works fine because it just return the exec results, even if it has
+    // a "grops" property.
+    var re = /./;
+    re.exec = function () {
+      var result = [];
+      result.groups = { a: '7' };
+      return result;
+    };
+    return ''.replace(re, '$<a>') !== '7';
+  });
+
+  var SPLIT_WORKS_WITH_OVERWRITTEN_EXEC = (function () {
+    // Chrome 51 has a buggy "split" implementation when RegExp#exec !== nativeExec
+    var re = /(?:)/;
+    var originalExec = re.exec;
+    re.exec = function () { return originalExec.apply(this, arguments); };
+    var result = 'ab'.split(re);
+    return result.length === 2 && result[0] === 'a' && result[1] === 'b';
+  })();
+
+  var _fixReWks = function (KEY, length, exec) {
+    var SYMBOL = _wks$1(KEY);
+
+    var DELEGATES_TO_SYMBOL = !_fails$1(function () {
+      // String methods call symbol-named RegEp methods
+      var O = {};
+      O[SYMBOL] = function () { return 7; };
+      return ''[KEY](O) != 7;
+    });
+
+    var DELEGATES_TO_EXEC = DELEGATES_TO_SYMBOL ? !_fails$1(function () {
+      // Symbol-named RegExp methods call .exec
+      var execCalled = false;
+      var re = /a/;
+      re.exec = function () { execCalled = true; return null; };
+      if (KEY === 'split') {
+        // RegExp[@@split] doesn't call the regex's exec method, but first creates
+        // a new one. We need to return the patched regex when creating the new one.
+        re.constructor = {};
+        re.constructor[SPECIES] = function () { return re; };
+      }
+      re[SYMBOL]('');
+      return !execCalled;
+    }) : undefined;
+
+    if (
+      !DELEGATES_TO_SYMBOL ||
+      !DELEGATES_TO_EXEC ||
+      (KEY === 'replace' && !REPLACE_SUPPORTS_NAMED_GROUPS) ||
+      (KEY === 'split' && !SPLIT_WORKS_WITH_OVERWRITTEN_EXEC)
+    ) {
+      var nativeRegExpMethod = /./[SYMBOL];
+      var fns = exec(
+        _defined$1,
+        SYMBOL,
+        ''[KEY],
+        function maybeCallNative(nativeMethod, regexp, str, arg2, forceStringMethod) {
+          if (regexp.exec === _regexpExec) {
+            if (DELEGATES_TO_SYMBOL && !forceStringMethod) {
+              // The native String method already delegates to @@method (this
+              // polyfilled function), leasing to infinite recursion.
+              // We avoid it by directly calling the native @@method method.
+              return { done: true, value: nativeRegExpMethod.call(regexp, str, arg2) };
+            }
+            return { done: true, value: nativeMethod.call(str, regexp, arg2) };
+          }
+          return { done: false };
+        }
+      );
+      var strfn = fns[0];
+      var rxfn = fns[1];
+
+      _redefine$1(String.prototype, KEY, strfn);
+      _hide$1(RegExp.prototype, SYMBOL, length == 2
+        // 21.2.5.8 RegExp.prototype[@@replace](string, replaceValue)
+        // 21.2.5.11 RegExp.prototype[@@split](string, limit)
+        ? function (string, arg) { return rxfn.call(string, this, arg); }
+        // 21.2.5.6 RegExp.prototype[@@match](string)
+        // 21.2.5.9 RegExp.prototype[@@search](string)
+        : function (string) { return rxfn.call(string, this); }
+      );
+    }
+  };
+
+  // @@match logic
+  _fixReWks('match', 1, function (defined, MATCH, $match, maybeCallNative) {
+    return [
+      // `String.prototype.match` method
+      // https://tc39.github.io/ecma262/#sec-string.prototype.match
+      function match(regexp) {
+        var O = defined(this);
+        var fn = regexp == undefined ? undefined : regexp[MATCH];
+        return fn !== undefined ? fn.call(regexp, O) : new RegExp(regexp)[MATCH](String(O));
+      },
+      // `RegExp.prototype[@@match]` method
+      // https://tc39.github.io/ecma262/#sec-regexp.prototype-@@match
+      function (regexp) {
+        var res = maybeCallNative($match, regexp, this);
+        if (res.done) return res.value;
+        var rx = _anObject$1(regexp);
+        var S = String(this);
+        if (!rx.global) return _regexpExecAbstract(rx, S);
+        var fullUnicode = rx.unicode;
+        rx.lastIndex = 0;
+        var A = [];
+        var n = 0;
+        var result;
+        while ((result = _regexpExecAbstract(rx, S)) !== null) {
+          var matchStr = String(result[0]);
+          A[n] = matchStr;
+          if (matchStr === '') rx.lastIndex = _advanceStringIndex(S, _toLength$1(rx.lastIndex), fullUnicode);
+          n++;
+        }
+        return n === 0 ? null : A;
+      }
+    ];
+  });
+
+  // 22.1.3.31 Array.prototype[@@unscopables]
+  var UNSCOPABLES = _wks$1('unscopables');
+  var ArrayProto = Array.prototype;
+  if (ArrayProto[UNSCOPABLES] == undefined) _hide$1(ArrayProto, UNSCOPABLES, {});
+  var _addToUnscopables = function (key) {
+    ArrayProto[UNSCOPABLES][key] = true;
+  };
+
+  var _iterStep$1 = function (done, value) {
+    return { value: value, done: !!done };
+  };
+
+  var _iterators = {};
+
+  // fallback for non-array-like ES3 and non-enumerable old V8 strings
+
+  // eslint-disable-next-line no-prototype-builtins
+  var _iobject$1 = Object('z').propertyIsEnumerable(0) ? Object : function (it) {
+    return _cof$1(it) == 'String' ? it.split('') : Object(it);
+  };
+
+  // to indexed object, toObject with fallback for non-array-like ES3 strings
+
+
+  var _toIobject$1 = function (it) {
+    return _iobject$1(_defined$1(it));
+  };
+
+  var max$1 = Math.max;
+  var min$3 = Math.min;
+  var _toAbsoluteIndex$1 = function (index, length) {
+    index = _toInteger$1(index);
+    return index < 0 ? max$1(index + length, 0) : min$3(index, length);
+  };
+
+  // false -> Array#indexOf
+  // true  -> Array#includes
+
+
+
+  var _arrayIncludes$1 = function (IS_INCLUDES) {
+    return function ($this, el, fromIndex) {
+      var O = _toIobject$1($this);
+      var length = _toLength$1(O.length);
+      var index = _toAbsoluteIndex$1(fromIndex, length);
+      var value;
+      // Array#includes uses SameValueZero equality algorithm
+      // eslint-disable-next-line no-self-compare
+      if (IS_INCLUDES && el != el) while (length > index) {
+        value = O[index++];
+        // eslint-disable-next-line no-self-compare
+        if (value != value) return true;
+      // Array#indexOf ignores holes, Array#includes - not
+      } else for (;length > index; index++) if (IS_INCLUDES || index in O) {
+        if (O[index] === el) return IS_INCLUDES || index || 0;
+      } return !IS_INCLUDES && -1;
+    };
+  };
+
+  var shared$1 = _shared$1('keys');
+
+  var _sharedKey$1 = function (key) {
+    return shared$1[key] || (shared$1[key] = _uid$1(key));
+  };
+
+  var arrayIndexOf$1 = _arrayIncludes$1(false);
+  var IE_PROTO$3 = _sharedKey$1('IE_PROTO');
+
+  var _objectKeysInternal$1 = function (object, names) {
+    var O = _toIobject$1(object);
+    var i = 0;
+    var result = [];
+    var key;
+    for (key in O) if (key != IE_PROTO$3) _has$1(O, key) && result.push(key);
+    // Don't enum bug & hidden keys
+    while (names.length > i) if (_has$1(O, key = names[i++])) {
+      ~arrayIndexOf$1(result, key) || result.push(key);
+    }
+    return result;
+  };
+
+  // IE 8- don't enum bug keys
+  var _enumBugKeys$1 = (
+    'constructor,hasOwnProperty,isPrototypeOf,propertyIsEnumerable,toLocaleString,toString,valueOf'
+  ).split(',');
+
+  // 19.1.2.14 / 15.2.3.14 Object.keys(O)
+
+
+
+  var _objectKeys$1 = Object.keys || function keys(O) {
+    return _objectKeysInternal$1(O, _enumBugKeys$1);
+  };
+
+  var _objectDps$1 = _descriptors$1 ? Object.defineProperties : function defineProperties(O, Properties) {
+    _anObject$1(O);
+    var keys = _objectKeys$1(Properties);
+    var length = keys.length;
+    var i = 0;
+    var P;
+    while (length > i) _objectDp$1.f(O, P = keys[i++], Properties[P]);
+    return O;
+  };
+
+  var document$4 = _global$1.document;
+  var _html$1 = document$4 && document$4.documentElement;
+
+  // 19.1.2.2 / 15.2.3.5 Object.create(O [, Properties])
+
+
+
+  var IE_PROTO$4 = _sharedKey$1('IE_PROTO');
+  var Empty$1 = function () { /* empty */ };
+  var PROTOTYPE$4 = 'prototype';
+
+  // Create object with fake `null` prototype: use iframe Object with cleared prototype
+  var createDict$1 = function () {
+    // Thrash, waste and sodomy: IE GC bug
+    var iframe = _domCreate$1('iframe');
+    var i = _enumBugKeys$1.length;
+    var lt = '<';
+    var gt = '>';
+    var iframeDocument;
+    iframe.style.display = 'none';
+    _html$1.appendChild(iframe);
+    iframe.src = 'javascript:'; // eslint-disable-line no-script-url
+    // createDict = iframe.contentWindow.Object;
+    // html.removeChild(iframe);
+    iframeDocument = iframe.contentWindow.document;
+    iframeDocument.open();
+    iframeDocument.write(lt + 'script' + gt + 'document.F=Object' + lt + '/script' + gt);
+    iframeDocument.close();
+    createDict$1 = iframeDocument.F;
+    while (i--) delete createDict$1[PROTOTYPE$4][_enumBugKeys$1[i]];
+    return createDict$1();
+  };
+
+  var _objectCreate$1 = Object.create || function create(O, Properties) {
+    var result;
+    if (O !== null) {
+      Empty$1[PROTOTYPE$4] = _anObject$1(O);
+      result = new Empty$1();
+      Empty$1[PROTOTYPE$4] = null;
+      // add "__proto__" for Object.getPrototypeOf polyfill
+      result[IE_PROTO$4] = O;
+    } else result = createDict$1();
+    return Properties === undefined ? result : _objectDps$1(result, Properties);
+  };
+
+  var def$1 = _objectDp$1.f;
+
+  var TAG$2 = _wks$1('toStringTag');
+
+  var _setToStringTag$1 = function (it, tag, stat) {
+    if (it && !_has$1(it = stat ? it : it.prototype, TAG$2)) def$1(it, TAG$2, { configurable: true, value: tag });
+  };
+
+  var IteratorPrototype$1 = {};
+
+  // 25.1.2.1.1 %IteratorPrototype%[@@iterator]()
+  _hide$1(IteratorPrototype$1, _wks$1('iterator'), function () { return this; });
+
+  var _iterCreate$1 = function (Constructor, NAME, next) {
+    Constructor.prototype = _objectCreate$1(IteratorPrototype$1, { next: _propertyDesc$1(1, next) });
+    _setToStringTag$1(Constructor, NAME + ' Iterator');
+  };
+
+  // 7.1.13 ToObject(argument)
+
+  var _toObject$1 = function (it) {
+    return Object(_defined$1(it));
+  };
+
+  // 19.1.2.9 / 15.2.3.2 Object.getPrototypeOf(O)
+
+
+  var IE_PROTO$5 = _sharedKey$1('IE_PROTO');
+  var ObjectProto$2 = Object.prototype;
+
+  var _objectGpo$1 = Object.getPrototypeOf || function (O) {
+    O = _toObject$1(O);
+    if (_has$1(O, IE_PROTO$5)) return O[IE_PROTO$5];
+    if (typeof O.constructor == 'function' && O instanceof O.constructor) {
+      return O.constructor.prototype;
+    } return O instanceof Object ? ObjectProto$2 : null;
+  };
+
+  var ITERATOR$1 = _wks$1('iterator');
+  var BUGGY$1 = !([].keys && 'next' in [].keys()); // Safari has buggy iterators w/o `next`
+  var FF_ITERATOR$1 = '@@iterator';
+  var KEYS$1 = 'keys';
+  var VALUES$1 = 'values';
+
+  var returnThis = function () { return this; };
+
+  var _iterDefine$1 = function (Base, NAME, Constructor, next, DEFAULT, IS_SET, FORCED) {
+    _iterCreate$1(Constructor, NAME, next);
+    var getMethod = function (kind) {
+      if (!BUGGY$1 && kind in proto) return proto[kind];
+      switch (kind) {
+        case KEYS$1: return function keys() { return new Constructor(this, kind); };
+        case VALUES$1: return function values() { return new Constructor(this, kind); };
+      } return function entries() { return new Constructor(this, kind); };
+    };
+    var TAG = NAME + ' Iterator';
+    var DEF_VALUES = DEFAULT == VALUES$1;
+    var VALUES_BUG = false;
+    var proto = Base.prototype;
+    var $native = proto[ITERATOR$1] || proto[FF_ITERATOR$1] || DEFAULT && proto[DEFAULT];
+    var $default = $native || getMethod(DEFAULT);
+    var $entries = DEFAULT ? !DEF_VALUES ? $default : getMethod('entries') : undefined;
+    var $anyNative = NAME == 'Array' ? proto.entries || $native : $native;
+    var methods, key, IteratorPrototype;
+    // Fix native
+    if ($anyNative) {
+      IteratorPrototype = _objectGpo$1($anyNative.call(new Base()));
+      if (IteratorPrototype !== Object.prototype && IteratorPrototype.next) {
+        // Set @@toStringTag to native iterators
+        _setToStringTag$1(IteratorPrototype, TAG, true);
+        // fix for some old engines
+        if ( typeof IteratorPrototype[ITERATOR$1] != 'function') _hide$1(IteratorPrototype, ITERATOR$1, returnThis);
+      }
+    }
+    // fix Array#{values, @@iterator}.name in V8 / FF
+    if (DEF_VALUES && $native && $native.name !== VALUES$1) {
+      VALUES_BUG = true;
+      $default = function values() { return $native.call(this); };
+    }
+    // Define iterator
+    if ( (BUGGY$1 || VALUES_BUG || !proto[ITERATOR$1])) {
+      _hide$1(proto, ITERATOR$1, $default);
+    }
+    // Plug for library
+    _iterators[NAME] = $default;
+    _iterators[TAG] = returnThis;
+    if (DEFAULT) {
+      methods = {
+        values: DEF_VALUES ? $default : getMethod(VALUES$1),
+        keys: IS_SET ? $default : getMethod(KEYS$1),
+        entries: $entries
+      };
+      if (FORCED) for (key in methods) {
+        if (!(key in proto)) _redefine$1(proto, key, methods[key]);
+      } else _export$1(_export$1.P + _export$1.F * (BUGGY$1 || VALUES_BUG), NAME, methods);
+    }
+    return methods;
+  };
+
+  // 22.1.3.4 Array.prototype.entries()
+  // 22.1.3.13 Array.prototype.keys()
+  // 22.1.3.29 Array.prototype.values()
+  // 22.1.3.30 Array.prototype[@@iterator]()
+  var es6_array_iterator$1 = _iterDefine$1(Array, 'Array', function (iterated, kind) {
+    this._t = _toIobject$1(iterated); // target
+    this._i = 0;                   // next index
+    this._k = kind;                // kind
+  // 22.1.5.2.1 %ArrayIteratorPrototype%.next()
+  }, function () {
+    var O = this._t;
+    var kind = this._k;
+    var index = this._i++;
+    if (!O || index >= O.length) {
+      this._t = undefined;
+      return _iterStep$1(1);
+    }
+    if (kind == 'keys') return _iterStep$1(0, index);
+    if (kind == 'values') return _iterStep$1(0, O[index]);
+    return _iterStep$1(0, [index, O[index]]);
+  }, 'values');
+
+  // argumentsList[@@iterator] is %ArrayProto_values% (9.4.4.6, 9.4.4.7)
+  _iterators.Arguments = _iterators.Array;
+
+  _addToUnscopables('keys');
+  _addToUnscopables('values');
+  _addToUnscopables('entries');
+
+  var ITERATOR$2 = _wks$1('iterator');
+  var TO_STRING_TAG$1 = _wks$1('toStringTag');
+  var ArrayValues = _iterators.Array;
+
+  var DOMIterables$1 = {
+    CSSRuleList: true, // TODO: Not spec compliant, should be false.
+    CSSStyleDeclaration: false,
+    CSSValueList: false,
+    ClientRectList: false,
+    DOMRectList: false,
+    DOMStringList: false,
+    DOMTokenList: true,
+    DataTransferItemList: false,
+    FileList: false,
+    HTMLAllCollection: false,
+    HTMLCollection: false,
+    HTMLFormElement: false,
+    HTMLSelectElement: false,
+    MediaList: true, // TODO: Not spec compliant, should be false.
+    MimeTypeArray: false,
+    NamedNodeMap: false,
+    NodeList: true,
+    PaintRequestList: false,
+    Plugin: false,
+    PluginArray: false,
+    SVGLengthList: false,
+    SVGNumberList: false,
+    SVGPathSegList: false,
+    SVGPointList: false,
+    SVGStringList: false,
+    SVGTransformList: false,
+    SourceBufferList: false,
+    StyleSheetList: true, // TODO: Not spec compliant, should be false.
+    TextTrackCueList: false,
+    TextTrackList: false,
+    TouchList: false
+  };
+
+  for (var collections = _objectKeys$1(DOMIterables$1), i$1 = 0; i$1 < collections.length; i$1++) {
+    var NAME$1 = collections[i$1];
+    var explicit = DOMIterables$1[NAME$1];
+    var Collection$1 = _global$1[NAME$1];
+    var proto$1 = Collection$1 && Collection$1.prototype;
+    var key;
+    if (proto$1) {
+      if (!proto$1[ITERATOR$2]) _hide$1(proto$1, ITERATOR$2, ArrayValues);
+      if (!proto$1[TO_STRING_TAG$1]) _hide$1(proto$1, TO_STRING_TAG$1, NAME$1);
+      _iterators[NAME$1] = ArrayValues;
+      if (explicit) for (key in es6_array_iterator$1) if (!proto$1[key]) _redefine$1(proto$1, key, es6_array_iterator$1[key], true);
+    }
   }
 
   var $1_0 = "<?xml version=\"1.0\" encoding=\"utf-8\"?><svg xmlns=\"http://www.w3.org/2000/svg\" xmlns:xlink=\"http://www.w3.org/1999/xlink\"><symbol viewBox=\"0 0 24 24\" id=\"ic_3d_rotation_24px\"><path d=\"M7.52 21.48A10.487 10.487 0 0 1 1.55 13H.05C.56 19.16 5.71 24 12 24l.66-.03-3.81-3.81-1.33 1.32zm.89-6.52c-.19 0-.37-.03-.52-.08a1.07 1.07 0 0 1-.4-.24.99.99 0 0 1-.26-.37c-.06-.14-.09-.3-.09-.47h-1.3c0 .36.07.68.21.95.14.27.33.5.56.69.24.18.51.32.82.41.3.1.62.15.96.15.37 0 .72-.05 1.03-.15.32-.1.6-.25.83-.44s.42-.43.55-.72c.13-.29.2-.61.2-.97 0-.19-.02-.38-.07-.56a1.67 1.67 0 0 0-.23-.51c-.1-.16-.24-.3-.4-.43-.17-.13-.37-.23-.61-.31a2.098 2.098 0 0 0 .89-.75c.1-.15.17-.3.22-.46.05-.16.07-.32.07-.48 0-.36-.06-.68-.18-.96a1.78 1.78 0 0 0-.51-.69c-.2-.19-.47-.33-.77-.43C9.1 8.05 8.76 8 8.39 8c-.36 0-.69.05-1 .16-.3.11-.57.26-.79.45-.21.19-.38.41-.51.67-.12.26-.18.54-.18.85h1.3c0-.17.03-.32.09-.45s.14-.25.25-.34c.11-.09.23-.17.38-.22.15-.05.3-.08.48-.08.4 0 .7.1.89.31.19.2.29.49.29.86 0 .18-.03.34-.08.49a.87.87 0 0 1-.25.37c-.11.1-.25.18-.41.24-.16.06-.36.09-.58.09H7.5v1.03h.77c.22 0 .42.02.6.07s.33.13.45.23c.12.11.22.24.29.4.07.16.1.35.1.57 0 .41-.12.72-.35.93-.23.23-.55.33-.95.33zm8.55-5.92c-.32-.33-.7-.59-1.14-.77-.43-.18-.92-.27-1.46-.27H12v8h2.3c.55 0 1.06-.09 1.51-.27.45-.18.84-.43 1.16-.76.32-.33.57-.73.74-1.19.17-.47.26-.99.26-1.57v-.4c0-.58-.09-1.1-.26-1.57-.18-.47-.43-.87-.75-1.2zm-.39 3.16c0 .42-.05.79-.14 1.13-.1.33-.24.62-.43.85-.19.23-.43.41-.71.53-.29.12-.62.18-.99.18h-.91V9.12h.97c.72 0 1.27.23 1.64.69.38.46.57 1.12.57 1.99v.4zM12 0l-.66.03 3.81 3.81 1.33-1.33c3.27 1.55 5.61 4.72 5.96 8.48h1.5C23.44 4.84 18.29 0 12 0z\"/></symbol><symbol viewBox=\"0 0 24 24\" id=\"ic_accessibility_24px\"><path d=\"M12 2c1.1 0 2 .9 2 2s-.9 2-2 2-2-.9-2-2 .9-2 2-2zm9 7h-6v13h-2v-6h-2v6H9V9H3V7h18v2z\"/></symbol><symbol viewBox=\"0 0 24 24\" id=\"ic_accessible_24px\"><circle cx=\"12\" cy=\"4\" r=\"2\"/><path d=\"M19 13v-2c-1.54.02-3.09-.75-4.07-1.83l-1.29-1.43c-.17-.19-.38-.34-.61-.45-.01 0-.01-.01-.02-.01H13c-.35-.2-.75-.3-1.19-.26C10.76 7.11 10 8.04 10 9.09V15c0 1.1.9 2 2 2h5v5h2v-5.5c0-1.1-.9-2-2-2h-3v-3.45c1.29 1.07 3.25 1.94 5 1.95zm-6.17 5c-.41 1.16-1.52 2-2.83 2-1.66 0-3-1.34-3-3 0-1.31.84-2.41 2-2.83V12.1a5 5 0 1 0 5.9 5.9h-2.07z\"/></symbol><symbol viewBox=\"0 0 24 24\" id=\"ic_account_balance_24px\"><path d=\"M4 10v7h3v-7H4zm6 0v7h3v-7h-3zM2 22h19v-3H2v3zm14-12v7h3v-7h-3zm-4.5-9L2 6v2h19V6l-9.5-5z\"/></symbol><symbol viewBox=\"0 0 24 24\" id=\"ic_account_balance_wallet_24px\"><path d=\"M21 18v1c0 1.1-.9 2-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h14c1.1 0 2 .9 2 2v1h-9a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h9zm-9-2h10V8H12v8zm4-2.5c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5z\"/></symbol><symbol viewBox=\"0 0 24 24\" id=\"ic_account_box_24px\"><path d=\"M3 5v14a2 2 0 0 0 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2H5a2 2 0 0 0-2 2zm12 4c0 1.66-1.34 3-3 3s-3-1.34-3-3 1.34-3 3-3 3 1.34 3 3zm-9 8c0-2 4-3.1 6-3.1s6 1.1 6 3.1v1H6v-1z\"/></symbol><symbol viewBox=\"0 0 24 24\" id=\"ic_account_circle_24px\"><path d=\"M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2a7.2 7.2 0 0 1-6-3.22c.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08a7.2 7.2 0 0 1-6 3.22z\"/></symbol><symbol viewBox=\"0 0 24 24\" id=\"ic_add_shopping_cart_24px\"><path d=\"M11 9h2V6h3V4h-3V1h-2v3H8v2h3v3zm-4 9c-1.1 0-1.99.9-1.99 2S5.9 22 7 22s2-.9 2-2-.9-2-2-2zm10 0c-1.1 0-1.99.9-1.99 2s.89 2 1.99 2 2-.9 2-2-.9-2-2-2zm-9.83-3.25l.03-.12.9-1.63h7.45c.75 0 1.41-.41 1.75-1.03l3.86-7.01L19.42 4h-.01l-1.1 2-2.76 5H8.53l-.13-.27L6.16 6l-.95-2-.94-2H1v2h2l3.6 7.59-1.35 2.45c-.16.28-.25.61-.25.96 0 1.1.9 2 2 2h12v-2H7.42c-.13 0-.25-.11-.25-.25z\"/></symbol><symbol viewBox=\"0 0 24 24\" id=\"ic_alarm_24px\"><path d=\"M22 5.72l-4.6-3.86-1.29 1.53 4.6 3.86L22 5.72zM7.88 3.39L6.6 1.86 2 5.71l1.29 1.53 4.59-3.85zM12.5 8H11v6l4.75 2.85.75-1.23-4-2.37V8zM12 4c-4.97 0-9 4.03-9 9s4.02 9 9 9a9 9 0 0 0 0-18zm0 16c-3.87 0-7-3.13-7-7s3.13-7 7-7 7 3.13 7 7-3.13 7-7 7z\"/></symbol><symbol viewBox=\"0 0 24 24\" id=\"ic_alarm_add_24px\"><path d=\"M7.88 3.39L6.6 1.86 2 5.71l1.29 1.53 4.59-3.85zM22 5.72l-4.6-3.86-1.29 1.53 4.6 3.86L22 5.72zM12 4c-4.97 0-9 4.03-9 9s4.02 9 9 9a9 9 0 0 0 0-18zm0 16c-3.87 0-7-3.13-7-7s3.13-7 7-7 7 3.13 7 7-3.13 7-7 7zm1-11h-2v3H8v2h3v3h2v-3h3v-2h-3V9z\"/></symbol><symbol viewBox=\"0 0 24 24\" id=\"ic_alarm_off_24px\"><path d=\"M12 6c3.87 0 7 3.13 7 7 0 .84-.16 1.65-.43 2.4l1.52 1.52c.58-1.19.91-2.51.91-3.92a9 9 0 0 0-9-9c-1.41 0-2.73.33-3.92.91L9.6 6.43C10.35 6.16 11.16 6 12 6zm10-.28l-4.6-3.86-1.29 1.53 4.6 3.86L22 5.72zM2.92 2.29L1.65 3.57 2.98 4.9l-1.11.93 1.42 1.42 1.11-.94.8.8A8.964 8.964 0 0 0 3 13c0 4.97 4.02 9 9 9 2.25 0 4.31-.83 5.89-2.2l2.2 2.2 1.27-1.27L3.89 3.27l-.97-.98zm13.55 16.1C15.26 19.39 13.7 20 12 20c-3.87 0-7-3.13-7-7 0-1.7.61-3.26 1.61-4.47l9.86 9.86zM8.02 3.28L6.6 1.86l-.86.71 1.42 1.42.86-.71z\"/></symbol><symbol viewBox=\"0 0 24 24\" id=\"ic_alarm_on_24px\"><path d=\"M22 5.72l-4.6-3.86-1.29 1.53 4.6 3.86L22 5.72zM7.88 3.39L6.6 1.86 2 5.71l1.29 1.53 4.59-3.85zM12 4c-4.97 0-9 4.03-9 9s4.02 9 9 9a9 9 0 0 0 0-18zm0 16c-3.87 0-7-3.13-7-7s3.13-7 7-7 7 3.13 7 7-3.13 7-7 7zm-1.46-5.47L8.41 12.4l-1.06 1.06 3.18 3.18 6-6-1.06-1.06-4.93 4.95z\"/></symbol><symbol viewBox=\"0 0 24 24\" id=\"ic_all_out_24px\"><path d=\"M16.21 4.16l4 4v-4zm4 12l-4 4h4zm-12 4l-4-4v4zm-4-12l4-4h-4zm12.95-.95c-2.73-2.73-7.17-2.73-9.9 0s-2.73 7.17 0 9.9 7.17 2.73 9.9 0 2.73-7.16 0-9.9zm-1.1 8.8c-2.13 2.13-5.57 2.13-7.7 0s-2.13-5.57 0-7.7 5.57-2.13 7.7 0 2.13 5.57 0 7.7z\" fill=\"#010101\"/></symbol><symbol viewBox=\"0 0 24 24\" id=\"ic_android_24px\"><path d=\"M6 18c0 .55.45 1 1 1h1v3.5c0 .83.67 1.5 1.5 1.5s1.5-.67 1.5-1.5V19h2v3.5c0 .83.67 1.5 1.5 1.5s1.5-.67 1.5-1.5V19h1c.55 0 1-.45 1-1V8H6v10zM3.5 8C2.67 8 2 8.67 2 9.5v7c0 .83.67 1.5 1.5 1.5S5 17.33 5 16.5v-7C5 8.67 4.33 8 3.5 8zm17 0c-.83 0-1.5.67-1.5 1.5v7c0 .83.67 1.5 1.5 1.5s1.5-.67 1.5-1.5v-7c0-.83-.67-1.5-1.5-1.5zm-4.97-5.84l1.3-1.3c.2-.2.2-.51 0-.71-.2-.2-.51-.2-.71 0l-1.48 1.48A5.84 5.84 0 0 0 12 1c-.96 0-1.86.23-2.66.63L7.85.15c-.2-.2-.51-.2-.71 0-.2.2-.2.51 0 .71l1.31 1.31A5.983 5.983 0 0 0 6 7h12c0-1.99-.97-3.75-2.47-4.84zM10 5H9V4h1v1zm5 0h-1V4h1v1z\"/></symbol><symbol viewBox=\"0 0 24 24\" id=\"ic_announcement_24px\"><path d=\"M20 2H4c-1.1 0-1.99.9-1.99 2L2 22l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-7 9h-2V5h2v6zm0 4h-2v-2h2v2z\"/></symbol><symbol viewBox=\"0 0 24 24\" id=\"ic_aspect_ratio_24px\"><path d=\"M19 12h-2v3h-3v2h5v-5zM7 9h3V7H5v5h2V9zm14-6H3c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h18c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16.01H3V4.99h18v14.02z\"/></symbol><symbol viewBox=\"0 0 24 24\" id=\"ic_assessment_24px\"><path d=\"M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zM9 17H7v-7h2v7zm4 0h-2V7h2v10zm4 0h-2v-4h2v4z\"/></symbol><symbol viewBox=\"0 0 24 24\" id=\"ic_assignment_24px\"><path d=\"M19 3h-4.18C14.4 1.84 13.3 1 12 1c-1.3 0-2.4.84-2.82 2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 0c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1zm2 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z\"/></symbol><symbol viewBox=\"0 0 24 24\" id=\"ic_assignment_ind_24px\"><path d=\"M19 3h-4.18C14.4 1.84 13.3 1 12 1c-1.3 0-2.4.84-2.82 2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 0c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1zm0 4c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm6 12H6v-1.4c0-2 4-3.1 6-3.1s6 1.1 6 3.1V19z\"/></symbol><symbol viewBox=\"0 0 24 24\" id=\"ic_assignment_late_24px\"><path d=\"M19 3h-4.18C14.4 1.84 13.3 1 12 1c-1.3 0-2.4.84-2.82 2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-6 15h-2v-2h2v2zm0-4h-2V8h2v6zm-1-9c-.55 0-1-.45-1-1s.45-1 1-1 1 .45 1 1-.45 1-1 1z\"/></symbol><symbol viewBox=\"0 0 24 24\" id=\"ic_assignment_return_24px\"><path d=\"M19 3h-4.18C14.4 1.84 13.3 1 12 1c-1.3 0-2.4.84-2.82 2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 0c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1zm4 12h-4v3l-5-5 5-5v3h4v4z\"/></symbol><symbol viewBox=\"0 0 24 24\" id=\"ic_assignment_returned_24px\"><path d=\"M19 3h-4.18C14.4 1.84 13.3 1 12 1c-1.3 0-2.4.84-2.82 2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 0c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1zm0 15l-5-5h3V9h4v4h3l-5 5z\"/></symbol><symbol viewBox=\"0 0 24 24\" id=\"ic_assignment_turned_in_24px\"><path d=\"M19 3h-4.18C14.4 1.84 13.3 1 12 1c-1.3 0-2.4.84-2.82 2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 0c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1zm-2 14l-4-4 1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8z\"/></symbol><symbol viewBox=\"0 0 24 24\" id=\"ic_autorenew_24px\"><path d=\"M12 6v3l4-4-4-4v3c-4.42 0-8 3.58-8 8 0 1.57.46 3.03 1.24 4.26L6.7 14.8A5.87 5.87 0 0 1 6 12c0-3.31 2.69-6 6-6zm6.76 1.74L17.3 9.2c.44.84.7 1.79.7 2.8 0 3.31-2.69 6-6 6v-3l-4 4 4 4v-3c4.42 0 8-3.58 8-8 0-1.57-.46-3.03-1.24-4.26z\"/></symbol><symbol viewBox=\"0 0 24 24\" id=\"ic_backup_24px\"><path d=\"M19.35 10.04A7.49 7.49 0 0 0 12 4C9.11 4 6.6 5.64 5.35 8.04A5.994 5.994 0 0 0 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96zM14 13v4h-4v-4H7l5-5 5 5h-3z\"/></symbol><symbol viewBox=\"0 0 24 24\" id=\"ic_book_24px\"><path d=\"M18 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zM6 4h5v8l-2.5-1.5L6 12V4z\"/></symbol><symbol viewBox=\"0 0 24 24\" id=\"ic_bookmark_24px\"><path d=\"M17 3H7c-1.1 0-1.99.9-1.99 2L5 21l7-3 7 3V5c0-1.1-.9-2-2-2z\"/></symbol><symbol viewBox=\"0 0 24 24\" id=\"ic_bookmark_border_24px\"><path d=\"M17 3H7c-1.1 0-1.99.9-1.99 2L5 21l7-3 7 3V5c0-1.1-.9-2-2-2zm0 15l-5-2.18L7 18V5h10v13z\"/></symbol><symbol viewBox=\"0 0 24 24\" id=\"ic_bug_report_24px\"><path d=\"M20 8h-2.81a5.985 5.985 0 0 0-1.82-1.96L17 4.41 15.59 3l-2.17 2.17C12.96 5.06 12.49 5 12 5c-.49 0-.96.06-1.41.17L8.41 3 7 4.41l1.62 1.63C7.88 6.55 7.26 7.22 6.81 8H4v2h2.09c-.05.33-.09.66-.09 1v1H4v2h2v1c0 .34.04.67.09 1H4v2h2.81c1.04 1.79 2.97 3 5.19 3s4.15-1.21 5.19-3H20v-2h-2.09c.05-.33.09-.66.09-1v-1h2v-2h-2v-1c0-.34-.04-.67-.09-1H20V8zm-6 8h-4v-2h4v2zm0-4h-4v-2h4v2z\"/></symbol><symbol viewBox=\"0 0 24 24\" id=\"ic_build_24px\"><path d=\"M22.7 19l-9.1-9.1c.9-2.3.4-5-1.5-6.9-2-2-5-2.4-7.4-1.3L9 6 6 9 1.6 4.7C.4 7.1.9 10.1 2.9 12.1c1.9 1.9 4.6 2.4 6.9 1.5l9.1 9.1c.4.4 1 .4 1.4 0l2.3-2.3c.5-.4.5-1.1.1-1.4z\"/></symbol><symbol viewBox=\"0 0 24 24\" id=\"ic_cached_24px\"><path d=\"M19 8l-4 4h3c0 3.31-2.69 6-6 6a5.87 5.87 0 0 1-2.8-.7l-1.46 1.46A7.93 7.93 0 0 0 12 20c4.42 0 8-3.58 8-8h3l-4-4zM6 12c0-3.31 2.69-6 6-6 1.01 0 1.97.25 2.8.7l1.46-1.46A7.93 7.93 0 0 0 12 4c-4.42 0-8 3.58-8 8H1l4 4 4-4H6z\"/></symbol><symbol viewBox=\"0 0 24 24\" id=\"ic_camera_enhance_24px\"><path d=\"M9 3L7.17 5H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2h-3.17L15 3H9zm3 15c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-1l1.25-2.75L16 13l-2.75-1.25L12 9l-1.25 2.75L8 13l2.75 1.25z\"/></symbol><symbol viewBox=\"0 0 24 24\" id=\"ic_card_giftcard_24px\"><path d=\"M20 6h-2.18c.11-.31.18-.65.18-1a2.996 2.996 0 0 0-5.5-1.65l-.5.67-.5-.68A3.01 3.01 0 0 0 9 2C7.34 2 6 3.34 6 5c0 .35.07.69.18 1H4c-1.11 0-1.99.89-1.99 2L2 19c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V8c0-1.11-.89-2-2-2zm-5-2c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1zM9 4c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1zm11 15H4v-2h16v2zm0-5H4V8h5.08L7 10.83 8.62 12 11 8.76l1-1.36 1 1.36L15.38 12 17 10.83 14.92 8H20v6z\"/></symbol><symbol viewBox=\"0 0 24 24\" id=\"ic_card_membership_24px\"><path d=\"M20 2H4c-1.11 0-2 .89-2 2v11c0 1.11.89 2 2 2h4v5l4-2 4 2v-5h4c1.11 0 2-.89 2-2V4c0-1.11-.89-2-2-2zm0 13H4v-2h16v2zm0-5H4V4h16v6z\"/></symbol><symbol viewBox=\"0 0 24 24\" id=\"ic_card_travel_24px\"><path d=\"M20 6h-3V4c0-1.11-.89-2-2-2H9c-1.11 0-2 .89-2 2v2H4c-1.11 0-2 .89-2 2v11c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V8c0-1.11-.89-2-2-2zM9 4h6v2H9V4zm11 15H4v-2h16v2zm0-5H4V8h3v2h2V8h6v2h2V8h3v6z\"/></symbol><symbol viewBox=\"0 0 24 24\" id=\"ic_change_history_24px\"><path d=\"M12 7.77L18.39 18H5.61L12 7.77M12 4L2 20h20L12 4z\"/></symbol><symbol viewBox=\"0 0 24 24\" id=\"ic_check_circle_24px\"><path d=\"M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z\"/></symbol><symbol viewBox=\"0 0 24 24\" id=\"ic_chrome_reader_mode_24px\"><path d=\"M13 12h7v1.5h-7zm0-2.5h7V11h-7zm0 5h7V16h-7zM21 4H3c-1.1 0-2 .9-2 2v13c0 1.1.9 2 2 2h18c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 15h-9V6h9v13z\"/></symbol><symbol viewBox=\"0 0 24 24\" id=\"ic_class_24px\"><path d=\"M18 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zM6 4h5v8l-2.5-1.5L6 12V4z\"/></symbol><symbol viewBox=\"0 0 24 24\" id=\"ic_code_24px\"><path d=\"M9.4 16.6L4.8 12l4.6-4.6L8 6l-6 6 6 6 1.4-1.4zm5.2 0l4.6-4.6-4.6-4.6L16 6l6 6-6 6-1.4-1.4z\"/></symbol><symbol viewBox=\"0 0 24 24\" id=\"ic_compare_arrows_24px\"><path d=\"M9.01 14H2v2h7.01v3L13 15l-3.99-4v3zm5.98-1v-3H22V8h-7.01V5L11 9l3.99 4z\"/></symbol><symbol viewBox=\"0 0 24 24\" id=\"ic_copyright_24px\"><path d=\"M10.08 10.86c.05-.33.16-.62.3-.87s.34-.46.59-.62c.24-.15.54-.22.91-.23.23.01.44.05.63.13.2.09.38.21.52.36s.25.33.34.53.13.42.14.64h1.79c-.02-.47-.11-.9-.28-1.29s-.4-.73-.7-1.01-.66-.5-1.08-.66-.88-.23-1.39-.23c-.65 0-1.22.11-1.7.34s-.88.53-1.2.92-.56.84-.71 1.36S8 11.29 8 11.87v.27c0 .58.08 1.12.23 1.64s.39.97.71 1.35.72.69 1.2.91 1.05.34 1.7.34c.47 0 .91-.08 1.32-.23s.77-.36 1.08-.63.56-.58.74-.94.29-.74.3-1.15h-1.79c-.01.21-.06.4-.15.58s-.21.33-.36.46-.32.23-.52.3c-.19.07-.39.09-.6.1-.36-.01-.66-.08-.89-.23-.25-.16-.45-.37-.59-.62s-.25-.55-.3-.88-.08-.67-.08-1v-.27c0-.35.03-.68.08-1.01zM12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z\"/></symbol><symbol viewBox=\"0 0 24 24\" id=\"ic_credit_card_24px\"><path d=\"M20 4H4c-1.11 0-1.99.89-1.99 2L2 18c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V6c0-1.11-.89-2-2-2zm0 14H4v-6h16v6zm0-10H4V6h16v2z\"/></symbol><symbol viewBox=\"0 0 24 24\" id=\"ic_dashboard_24px\"><path d=\"M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z\"/></symbol><symbol viewBox=\"0 0 24 24\" id=\"ic_date_range_24px\"><path d=\"M9 11H7v2h2v-2zm4 0h-2v2h2v-2zm4 0h-2v2h2v-2zm2-7h-1V2h-2v2H8V2H6v2H5c-1.11 0-1.99.9-1.99 2L3 20a2 2 0 0 0 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V9h14v11z\"/></symbol><symbol viewBox=\"0 0 24 24\" id=\"ic_delete_24px\"><path d=\"M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z\"/></symbol><symbol viewBox=\"0 0 24 24\" id=\"ic_delete_forever_24px\"><path d=\"M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zm2.46-7.12l1.41-1.41L12 12.59l2.12-2.12 1.41 1.41L13.41 14l2.12 2.12-1.41 1.41L12 15.41l-2.12 2.12-1.41-1.41L10.59 14l-2.13-2.12zM15.5 4l-1-1h-5l-1 1H5v2h14V4z\"/></symbol><symbol viewBox=\"0 0 24 24\" id=\"ic_description_24px\"><path d=\"M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z\"/></symbol><symbol viewBox=\"0 0 24 24\" id=\"ic_dns_24px\"><path d=\"M20 13H4c-.55 0-1 .45-1 1v6c0 .55.45 1 1 1h16c.55 0 1-.45 1-1v-6c0-.55-.45-1-1-1zM7 19c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zM20 3H4c-.55 0-1 .45-1 1v6c0 .55.45 1 1 1h16c.55 0 1-.45 1-1V4c0-.55-.45-1-1-1zM7 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2z\"/></symbol><symbol viewBox=\"0 0 24 24\" id=\"ic_done_24px\"><path d=\"M9 16.2L4.8 12l-1.4 1.4L9 19 21 7l-1.4-1.4L9 16.2z\"/></symbol><symbol viewBox=\"0 0 24 24\" id=\"ic_done_all_24px\"><path d=\"M18 7l-1.41-1.41-6.34 6.34 1.41 1.41L18 7zm4.24-1.41L11.66 16.17 7.48 12l-1.41 1.41L11.66 19l12-12-1.42-1.41zM.41 13.41L6 19l1.41-1.41L1.83 12 .41 13.41z\"/></symbol><symbol viewBox=\"0 0 24 24\" id=\"ic_donut_large_24px\"><path d=\"M11 5.08V2c-5 .5-9 4.81-9 10s4 9.5 9 10v-3.08c-3-.48-6-3.4-6-6.92s3-6.44 6-6.92zM18.97 11H22c-.47-5-4-8.53-9-9v3.08C16 5.51 18.54 8 18.97 11zM13 18.92V22c5-.47 8.53-4 9-9h-3.03c-.43 3-2.97 5.49-5.97 5.92z\"/></symbol><symbol viewBox=\"0 0 24 24\" id=\"ic_donut_small_24px\"><path d=\"M11 9.16V2c-5 .5-9 4.79-9 10s4 9.5 9 10v-7.16c-1-.41-2-1.52-2-2.84s1-2.43 2-2.84zM14.86 11H22c-.48-4.75-4-8.53-9-9v7.16c1 .3 1.52.98 1.86 1.84zM13 14.84V22c5-.47 8.52-4.25 9-9h-7.14c-.34.86-.86 1.54-1.86 1.84z\"/></symbol><symbol viewBox=\"0 0 24 24\" id=\"ic_eject_24px\"><path d=\"M5 17h14v2H5zm7-12L5.33 15h13.34z\"/></symbol><symbol viewBox=\"0 0 24 24\" id=\"ic_euro_symbol_24px\"><path d=\"M15 18.5A6.48 6.48 0 0 1 9.24 15H15v-2H8.58c-.05-.33-.08-.66-.08-1s.03-.67.08-1H15V9H9.24A6.49 6.49 0 0 1 15 5.5c1.61 0 3.09.59 4.23 1.57L21 5.3A8.955 8.955 0 0 0 15 3c-3.92 0-7.24 2.51-8.48 6H3v2h3.06a8.262 8.262 0 0 0 0 2H3v2h3.52c1.24 3.49 4.56 6 8.48 6 2.31 0 4.41-.87 6-2.3l-1.78-1.77c-1.13.98-2.6 1.57-4.22 1.57z\"/></symbol><symbol viewBox=\"0 0 24 24\" id=\"ic_event_24px\"><path d=\"M17 12h-5v5h5v-5zM16 1v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19a2 2 0 0 0 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2h-1V1h-2zm3 18H5V8h14v11z\"/></symbol><symbol viewBox=\"0 0 24 24\" id=\"ic_event_seat_24px\"><path d=\"M4 18v3h3v-3h10v3h3v-6H4zm15-8h3v3h-3zM2 10h3v3H2zm15 3H7V5c0-1.1.9-2 2-2h6c1.1 0 2 .9 2 2v8z\"/></symbol><symbol viewBox=\"0 0 24 24\" id=\"ic_exit_to_app_24px\"><path d=\"M10.09 15.59L11.5 17l5-5-5-5-1.41 1.41L12.67 11H3v2h9.67l-2.58 2.59zM19 3H5a2 2 0 0 0-2 2v4h2V5h14v14H5v-4H3v4a2 2 0 0 0 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2z\"/></symbol><symbol viewBox=\"0 0 24 24\" id=\"ic_explore_24px\"><path d=\"M12 10.9c-.61 0-1.1.49-1.1 1.1s.49 1.1 1.1 1.1c.61 0 1.1-.49 1.1-1.1s-.49-1.1-1.1-1.1zM12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm2.19 12.19L6 18l3.81-8.19L18 6l-3.81 8.19z\"/></symbol><symbol viewBox=\"0 0 24 24\" id=\"ic_extension_24px\"><path d=\"M20.5 11H19V7c0-1.1-.9-2-2-2h-4V3.5a2.5 2.5 0 0 0-5 0V5H4c-1.1 0-1.99.9-1.99 2v3.8H3.5c1.49 0 2.7 1.21 2.7 2.7s-1.21 2.7-2.7 2.7H2V20c0 1.1.9 2 2 2h3.8v-1.5a2.7 2.7 0 0 1 2.7-2.7 2.7 2.7 0 0 1 2.7 2.7V22H17c1.1 0 2-.9 2-2v-4h1.5a2.5 2.5 0 0 0 0-5z\"/></symbol><symbol viewBox=\"0 0 24 24\" id=\"ic_face_24px\"><path d=\"M9 11.75a1.25 1.25 0 1 0 0 2.5 1.25 1.25 0 0 0 0-2.5zm6 0a1.25 1.25 0 1 0 0 2.5 1.25 1.25 0 0 0 0-2.5zM12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8 0-.29.02-.58.05-.86 2.36-1.05 4.23-2.98 5.21-5.37a9.974 9.974 0 0 0 10.41 3.97c.21.71.33 1.47.33 2.26 0 4.41-3.59 8-8 8z\"/></symbol><symbol viewBox=\"0 0 24 24\" id=\"ic_favorite_24px\"><path d=\"M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z\"/></symbol><symbol viewBox=\"0 0 24 24\" id=\"ic_favorite_border_24px\"><path d=\"M16.5 3c-1.74 0-3.41.81-4.5 2.09C10.91 3.81 9.24 3 7.5 3 4.42 3 2 5.42 2 8.5c0 3.78 3.4 6.86 8.55 11.54L12 21.35l1.45-1.32C18.6 15.36 22 12.28 22 8.5 22 5.42 19.58 3 16.5 3zm-4.4 15.55l-.1.1-.1-.1C7.14 14.24 4 11.39 4 8.5 4 6.5 5.5 5 7.5 5c1.54 0 3.04.99 3.57 2.36h1.87C13.46 5.99 14.96 5 16.5 5c2 0 3.5 1.5 3.5 3.5 0 2.89-3.14 5.74-7.9 10.05z\"/></symbol><symbol viewBox=\"0 0 24 24\" id=\"ic_feedback_24px\"><path d=\"M20 2H4c-1.1 0-1.99.9-1.99 2L2 22l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-7 12h-2v-2h2v2zm0-4h-2V6h2v4z\"/></symbol><symbol viewBox=\"0 0 24 24\" id=\"ic_find_in_page_24px\"><path d=\"M20 19.59V8l-6-6H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c.45 0 .85-.15 1.19-.4l-4.43-4.43c-.8.52-1.74.83-2.76.83-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5c0 1.02-.31 1.96-.83 2.75L20 19.59zM9 13c0 1.66 1.34 3 3 3s3-1.34 3-3-1.34-3-3-3-3 1.34-3 3z\"/></symbol><symbol viewBox=\"0 0 24 24\" id=\"ic_find_replace_24px\"><path d=\"M11 6c1.38 0 2.63.56 3.54 1.46L12 10h6V4l-2.05 2.05A6.976 6.976 0 0 0 11 4c-3.53 0-6.43 2.61-6.92 6H6.1A5 5 0 0 1 11 6zm5.64 9.14A6.89 6.89 0 0 0 17.92 12H15.9a5 5 0 0 1-4.9 4c-1.38 0-2.63-.56-3.54-1.46L10 12H4v6l2.05-2.05A6.976 6.976 0 0 0 11 18c1.55 0 2.98-.51 4.14-1.36L20 21.49 21.49 20l-4.85-4.86z\"/></symbol><symbol viewBox=\"0 0 24 24\" id=\"ic_fingerprint_24px\"><path d=\"M17.81 4.47c-.08 0-.16-.02-.23-.06C15.66 3.42 14 3 12.01 3c-1.98 0-3.86.47-5.57 1.41a.51.51 0 0 1-.68-.2.506.506 0 0 1 .2-.68C7.82 2.52 9.86 2 12.01 2c2.13 0 3.99.47 6.03 1.52.25.13.34.43.21.67a.49.49 0 0 1-.44.28zM3.5 9.72a.5.5 0 0 1-.41-.79c.99-1.4 2.25-2.5 3.75-3.27C9.98 4.04 14 4.03 17.15 5.65c1.5.77 2.76 1.86 3.75 3.25a.5.5 0 0 1-.12.7.5.5 0 0 1-.7-.12 9.388 9.388 0 0 0-3.39-2.94c-2.87-1.47-6.54-1.47-9.4.01-1.36.7-2.5 1.7-3.4 2.96-.08.14-.23.21-.39.21zm6.25 12.07a.47.47 0 0 1-.35-.15c-.87-.87-1.34-1.43-2.01-2.64-.69-1.23-1.05-2.73-1.05-4.34 0-2.97 2.54-5.39 5.66-5.39s5.66 2.42 5.66 5.39c0 .28-.22.5-.5.5s-.5-.22-.5-.5c0-2.42-2.09-4.39-4.66-4.39-2.57 0-4.66 1.97-4.66 4.39 0 1.44.32 2.77.93 3.85.64 1.15 1.08 1.64 1.85 2.42.19.2.19.51 0 .71-.11.1-.24.15-.37.15zm7.17-1.85c-1.19 0-2.24-.3-3.1-.89-1.49-1.01-2.38-2.65-2.38-4.39 0-.28.22-.5.5-.5s.5.22.5.5c0 1.41.72 2.74 1.94 3.56.71.48 1.54.71 2.54.71.24 0 .64-.03 1.04-.1.27-.05.53.13.58.41.05.27-.13.53-.41.58-.57.11-1.07.12-1.21.12zM14.91 22c-.04 0-.09-.01-.13-.02-1.59-.44-2.63-1.03-3.72-2.1a7.297 7.297 0 0 1-2.17-5.22c0-1.62 1.38-2.94 3.08-2.94 1.7 0 3.08 1.32 3.08 2.94 0 1.07.93 1.94 2.08 1.94s2.08-.87 2.08-1.94c0-3.77-3.25-6.83-7.25-6.83-2.84 0-5.44 1.58-6.61 4.03-.39.81-.59 1.76-.59 2.8 0 .78.07 2.01.67 3.61.1.26-.03.55-.29.64-.26.1-.55-.04-.64-.29a11.14 11.14 0 0 1-.73-3.96c0-1.2.23-2.29.68-3.24 1.33-2.79 4.28-4.6 7.51-4.6 4.55 0 8.25 3.51 8.25 7.83 0 1.62-1.38 2.94-3.08 2.94s-3.08-1.32-3.08-2.94c0-1.07-.93-1.94-2.08-1.94s-2.08.87-2.08 1.94c0 1.71.66 3.31 1.87 4.51.95.94 1.86 1.46 3.27 1.85.27.07.42.35.35.61-.05.23-.26.38-.47.38z\"/></symbol><symbol viewBox=\"0 0 24 24\" id=\"ic_flight_land_24px\"><path d=\"M2.5 19h19v2h-19zm7.18-5.73l4.35 1.16 5.31 1.42c.8.21 1.62-.26 1.84-1.06.21-.8-.26-1.62-1.06-1.84l-5.31-1.42-2.76-9.02L10.12 2v8.28L5.15 8.95l-.93-2.32-1.45-.39v5.17l1.6.43 5.31 1.43z\"/></symbol><symbol viewBox=\"0 0 24 24\" id=\"ic_flight_takeoff_24px\"><path d=\"M2.5 19h19v2h-19zm19.57-9.36c-.21-.8-1.04-1.28-1.84-1.06L14.92 10l-6.9-6.43-1.93.51 4.14 7.17-4.97 1.33-1.97-1.54-1.45.39 1.82 3.16.77 1.33 1.6-.43 5.31-1.42 4.35-1.16L21 11.49c.81-.23 1.28-1.05 1.07-1.85z\"/></symbol><symbol viewBox=\"0 0 24 24\" id=\"ic_flip_to_back_24px\"><path d=\"M9 7H7v2h2V7zm0 4H7v2h2v-2zm0-8a2 2 0 0 0-2 2h2V3zm4 12h-2v2h2v-2zm6-12v2h2c0-1.1-.9-2-2-2zm-6 0h-2v2h2V3zM9 17v-2H7a2 2 0 0 0 2 2zm10-4h2v-2h-2v2zm0-4h2V7h-2v2zm0 8c1.1 0 2-.9 2-2h-2v2zM5 7H3v12a2 2 0 0 0 2 2h12v-2H5V7zm10-2h2V3h-2v2zm0 12h2v-2h-2v2z\"/></symbol><symbol viewBox=\"0 0 24 24\" id=\"ic_flip_to_front_24px\"><path d=\"M3 13h2v-2H3v2zm0 4h2v-2H3v2zm2 4v-2H3a2 2 0 0 0 2 2zM3 9h2V7H3v2zm12 12h2v-2h-2v2zm4-18H9a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h10c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 12H9V5h10v10zm-8 6h2v-2h-2v2zm-4 0h2v-2H7v2z\"/></symbol><symbol viewBox=\"0 0 24 24\" id=\"ic_g_translate_24px\"><path d=\"M20 5h-9.12L10 2H4c-1.1 0-2 .9-2 2v13c0 1.1.9 2 2 2h7l1 3h8c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zM7.17 14.59c-2.25 0-4.09-1.83-4.09-4.09s1.83-4.09 4.09-4.09c1.04 0 1.99.37 2.74 1.07l.07.06-1.23 1.18-.06-.05c-.29-.27-.78-.59-1.52-.59-1.31 0-2.38 1.09-2.38 2.42s1.07 2.42 2.38 2.42c1.37 0 1.96-.87 2.12-1.46H7.08V9.91h3.95l.01.07c.04.21.05.4.05.61 0 2.35-1.61 4-3.92 4zm6.03-1.71c.33.6.74 1.18 1.19 1.7l-.54.53-.65-2.23zm.77-.76h-.99l-.31-1.04h3.99s-.34 1.31-1.56 2.74a9.18 9.18 0 0 1-1.13-1.7zM21 20c0 .55-.45 1-1 1h-7l2-2-.81-2.77.92-.92L17.79 18l.73-.73-2.71-2.68c.9-1.03 1.6-2.25 1.92-3.51H19v-1.04h-3.64V9h-1.04v1.04h-1.96L11.18 6H20c.55 0 1 .45 1 1v13z\"/></symbol><symbol viewBox=\"0 0 24 24\" id=\"ic_gavel_24px\"><path d=\"M1 21h12v2H1zM5.245 8.07l2.83-2.827 14.14 14.142-2.828 2.828zM12.317 1l5.657 5.656-2.83 2.83-5.654-5.66zM3.825 9.485l5.657 5.657-2.828 2.828-5.657-5.657z\"/></symbol><symbol viewBox=\"0 0 24 24\" id=\"ic_get_app_24px\"><path d=\"M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z\"/></symbol><symbol viewBox=\"0 0 24 24\" id=\"ic_gif_24px\"><path d=\"M11.5 9H13v6h-1.5zM9 9H6c-.6 0-1 .5-1 1v4c0 .5.4 1 1 1h3c.6 0 1-.5 1-1v-2H8.5v1.5h-2v-3H10V10c0-.5-.4-1-1-1zm10 1.5V9h-4.5v6H16v-2h2v-1.5h-2v-1z\"/></symbol><symbol viewBox=\"0 0 24 24\" id=\"ic_grade_24px\"><path d=\"M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z\"/></symbol><symbol viewBox=\"0 0 24 24\" id=\"ic_group_work_24px\"><path d=\"M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zM8 17.5a2.5 2.5 0 0 1 0-5 2.5 2.5 0 0 1 0 5zM9.5 8a2.5 2.5 0 0 1 5 0 2.5 2.5 0 0 1-5 0zm6.5 9.5a2.5 2.5 0 0 1 0-5 2.5 2.5 0 0 1 0 5z\"/></symbol><symbol viewBox=\"0 0 24 24\" id=\"ic_help_24px\"><path d=\"M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 17h-2v-2h2v2zm2.07-7.75l-.9.92C13.45 12.9 13 13.5 13 15h-2v-.5c0-1.1.45-2.1 1.17-2.83l1.24-1.26c.37-.36.59-.86.59-1.41 0-1.1-.9-2-2-2s-2 .9-2 2H8c0-2.21 1.79-4 4-4s4 1.79 4 4c0 .88-.36 1.68-.93 2.25z\"/></symbol><symbol viewBox=\"0 0 24 24\" id=\"ic_help_outline_24px\"><path d=\"M11 18h2v-2h-2v2zm1-16C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm0-14a4 4 0 0 0-4 4h2c0-1.1.9-2 2-2s2 .9 2 2c0 2-3 1.75-3 5h2c0-2.25 3-2.5 3-5a4 4 0 0 0-4-4z\"/></symbol><symbol viewBox=\"0 0 24 24\" id=\"ic_highlight_off_24px\"><path d=\"M14.59 8L12 10.59 9.41 8 8 9.41 10.59 12 8 14.59 9.41 16 12 13.41 14.59 16 16 14.59 13.41 12 16 9.41 14.59 8zM12 2C6.47 2 2 6.47 2 12s4.47 10 10 10 10-4.47 10-10S17.53 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z\"/></symbol><symbol viewBox=\"0 0 24 24\" id=\"ic_history_24px\"><path d=\"M13 3a9 9 0 0 0-9 9H1l3.89 3.89.07.14L9 12H6c0-3.87 3.13-7 7-7s7 3.13 7 7-3.13 7-7 7c-1.93 0-3.68-.79-4.94-2.06l-1.42 1.42A8.954 8.954 0 0 0 13 21a9 9 0 0 0 0-18zm-1 5v5l4.28 2.54.72-1.21-3.5-2.08V8H12z\"/></symbol><symbol viewBox=\"0 0 24 24\" id=\"ic_home_24px\"><path d=\"M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z\"/></symbol><symbol viewBox=\"0 0 24 24\" id=\"ic_hourglass_empty_24px\"><path d=\"M6 2v6h.01L6 8.01 10 12l-4 4 .01.01H6V22h12v-5.99h-.01L18 16l-4-4 4-3.99-.01-.01H18V2H6zm10 14.5V20H8v-3.5l4-4 4 4zm-4-5l-4-4V4h8v3.5l-4 4z\"/></symbol><symbol viewBox=\"0 0 24 24\" id=\"ic_hourglass_full_24px\"><path d=\"M6 2v6h.01L6 8.01 10 12l-4 4 .01.01H6V22h12v-5.99h-.01L18 16l-4-4 4-3.99-.01-.01H18V2H6z\"/></symbol><symbol viewBox=\"0 0 24 24\" id=\"ic_http_24px\"><path d=\"M4.5 11h-2V9H1v6h1.5v-2.5h2V15H6V9H4.5v2zm2.5-.5h1.5V15H10v-4.5h1.5V9H7v1.5zm5.5 0H14V15h1.5v-4.5H17V9h-4.5v1.5zm9-1.5H18v6h1.5v-2h2c.8 0 1.5-.7 1.5-1.5v-1c0-.8-.7-1.5-1.5-1.5zm0 2.5h-2v-1h2v1z\"/></symbol><symbol viewBox=\"0 0 24 24\" id=\"ic_https_24px\"><path d=\"M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z\"/></symbol><symbol viewBox=\"0 0 24 24\" id=\"ic_important_devices_24px\"><path d=\"M23 11.01L18 11c-.55 0-1 .45-1 1v9c0 .55.45 1 1 1h5c.55 0 1-.45 1-1v-9c0-.55-.45-.99-1-.99zM23 20h-5v-7h5v7zM20 2H2C.89 2 0 2.89 0 4v12a2 2 0 0 0 2 2h7v2H7v2h8v-2h-2v-2h2v-2H2V4h18v5h2V4a2 2 0 0 0-2-2zm-8.03 7L11 6l-.97 3H7l2.47 1.76-.94 2.91 2.47-1.8 2.47 1.8-.94-2.91L15 9h-3.03z\"/></symbol><symbol viewBox=\"0 0 24 24\" id=\"ic_info_24px\"><path d=\"M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z\"/></symbol><symbol viewBox=\"0 0 24 24\" id=\"ic_info_outline_24px\"><path d=\"M11 17h2v-6h-2v6zm1-15C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zM11 9h2V7h-2v2z\"/></symbol><symbol viewBox=\"0 0 24 24\" id=\"ic_input_24px\"><path d=\"M21 3.01H3c-1.1 0-2 .9-2 2V9h2V4.99h18v14.03H3V15H1v4.01c0 1.1.9 1.98 2 1.98h18c1.1 0 2-.88 2-1.98v-14a2 2 0 0 0-2-2zM11 16l4-4-4-4v3H1v2h10v3z\"/></symbol><symbol viewBox=\"0 0 24 24\" id=\"ic_invert_colors_24px\"><path d=\"M17.66 7.93L12 2.27 6.34 7.93c-3.12 3.12-3.12 8.19 0 11.31A7.98 7.98 0 0 0 12 21.58c2.05 0 4.1-.78 5.66-2.34 3.12-3.12 3.12-8.19 0-11.31zM12 19.59c-1.6 0-3.11-.62-4.24-1.76C6.62 16.69 6 15.19 6 13.59s.62-3.11 1.76-4.24L12 5.1v14.49z\"/></symbol><symbol viewBox=\"0 0 24 24\" id=\"ic_label_24px\"><path d=\"M17.63 5.84C17.27 5.33 16.67 5 16 5L5 5.01C3.9 5.01 3 5.9 3 7v10c0 1.1.9 1.99 2 1.99L16 19c.67 0 1.27-.33 1.63-.84L22 12l-4.37-6.16z\"/></symbol><symbol viewBox=\"0 0 24 24\" id=\"ic_label_outline_24px\"><path d=\"M17.63 5.84C17.27 5.33 16.67 5 16 5L5 5.01C3.9 5.01 3 5.9 3 7v10c0 1.1.9 1.99 2 1.99L16 19c.67 0 1.27-.33 1.63-.84L22 12l-4.37-6.16zM16 17H5V7h11l3.55 5L16 17z\"/></symbol><symbol viewBox=\"0 0 24 24\" id=\"ic_language_24px\"><path d=\"M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zm6.93 6h-2.95a15.65 15.65 0 0 0-1.38-3.56A8.03 8.03 0 0 1 18.92 8zM12 4.04c.83 1.2 1.48 2.53 1.91 3.96h-3.82c.43-1.43 1.08-2.76 1.91-3.96zM4.26 14C4.1 13.36 4 12.69 4 12s.1-1.36.26-2h3.38c-.08.66-.14 1.32-.14 2 0 .68.06 1.34.14 2H4.26zm.82 2h2.95c.32 1.25.78 2.45 1.38 3.56A7.987 7.987 0 0 1 5.08 16zm2.95-8H5.08a7.987 7.987 0 0 1 4.33-3.56A15.65 15.65 0 0 0 8.03 8zM12 19.96c-.83-1.2-1.48-2.53-1.91-3.96h3.82c-.43 1.43-1.08 2.76-1.91 3.96zM14.34 14H9.66c-.09-.66-.16-1.32-.16-2 0-.68.07-1.35.16-2h4.68c.09.65.16 1.32.16 2 0 .68-.07 1.34-.16 2zm.25 5.56c.6-1.11 1.06-2.31 1.38-3.56h2.95a8.03 8.03 0 0 1-4.33 3.56zM16.36 14c.08-.66.14-1.32.14-2 0-.68-.06-1.34-.14-2h3.38c.16.64.26 1.31.26 2s-.1 1.36-.26 2h-3.38z\"/></symbol><symbol viewBox=\"0 0 24 24\" id=\"ic_launch_24px\"><path d=\"M19 19H5V5h7V3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14c1.1 0 2-.9 2-2v-7h-2v7zM14 3v2h3.59l-9.83 9.83 1.41 1.41L19 6.41V10h2V3h-7z\"/></symbol><symbol viewBox=\"0 0 24 24\" id=\"ic_lightbulb_outline_24px\"><path d=\"M9 21c0 .55.45 1 1 1h4c.55 0 1-.45 1-1v-1H9v1zm3-19C8.14 2 5 5.14 5 9c0 2.38 1.19 4.47 3 5.74V17c0 .55.45 1 1 1h6c.55 0 1-.45 1-1v-2.26c1.81-1.27 3-3.36 3-5.74 0-3.86-3.14-7-7-7zm2.85 11.1l-.85.6V16h-4v-2.3l-.85-.6A4.997 4.997 0 0 1 7 9c0-2.76 2.24-5 5-5s5 2.24 5 5c0 1.63-.8 3.16-2.15 4.1z\"/></symbol><symbol viewBox=\"0 0 24 24\" id=\"ic_line_style_24px\"><path d=\"M3 16h5v-2H3v2zm6.5 0h5v-2h-5v2zm6.5 0h5v-2h-5v2zM3 20h2v-2H3v2zm4 0h2v-2H7v2zm4 0h2v-2h-2v2zm4 0h2v-2h-2v2zm4 0h2v-2h-2v2zM3 12h8v-2H3v2zm10 0h8v-2h-8v2zM3 4v4h18V4H3z\"/></symbol><symbol viewBox=\"0 0 24 24\" id=\"ic_line_weight_24px\"><path d=\"M3 17h18v-2H3v2zm0 3h18v-1H3v1zm0-7h18v-3H3v3zm0-9v4h18V4H3z\"/></symbol><symbol viewBox=\"0 0 24 24\" id=\"ic_list_24px\"><path d=\"M3 13h2v-2H3v2zm0 4h2v-2H3v2zm0-8h2V7H3v2zm4 4h14v-2H7v2zm0 4h14v-2H7v2zM7 7v2h14V7H7z\"/></symbol><symbol viewBox=\"0 0 24 24\" id=\"ic_lock_24px\"><path d=\"M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z\"/></symbol><symbol viewBox=\"0 0 24 24\" id=\"ic_lock_open_24px\"><path d=\"M12 17c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm6-9h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6h1.9c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm0 12H6V10h12v10z\"/></symbol><symbol viewBox=\"0 0 24 24\" id=\"ic_lock_outline_24px\"><path d=\"M12 17c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm6-9h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zM8.9 6c0-1.71 1.39-3.1 3.1-3.1s3.1 1.39 3.1 3.1v2H8.9V6zM18 20H6V10h12v10z\"/></symbol><symbol viewBox=\"0 0 24 24\" id=\"ic_loyalty_24px\"><path d=\"M21.41 11.58l-9-9C12.05 2.22 11.55 2 11 2H4c-1.1 0-2 .9-2 2v7c0 .55.22 1.05.59 1.42l9 9c.36.36.86.58 1.41.58.55 0 1.05-.22 1.41-.59l7-7c.37-.36.59-.86.59-1.41 0-.55-.23-1.06-.59-1.42zM5.5 7C4.67 7 4 6.33 4 5.5S4.67 4 5.5 4 7 4.67 7 5.5 6.33 7 5.5 7zm11.77 8.27L13 19.54l-4.27-4.27A2.5 2.5 0 0 1 10.5 11c.69 0 1.32.28 1.77.74l.73.72.73-.73a2.5 2.5 0 0 1 3.54 3.54z\"/></symbol><symbol viewBox=\"0 0 24 24\" id=\"ic_markunread_mailbox_24px\"><path d=\"M20 6H10v6H8V4h6V0H6v6H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2z\"/></symbol><symbol viewBox=\"0 0 24 24\" id=\"ic_motorcycle_24px\"><path d=\"M19.44 9.03L15.41 5H11v2h3.59l2 2H5c-2.8 0-5 2.2-5 5s2.2 5 5 5c2.46 0 4.45-1.69 4.9-4h1.65l2.77-2.77c-.21.54-.32 1.14-.32 1.77 0 2.8 2.2 5 5 5s5-2.2 5-5c0-2.65-1.97-4.77-4.56-4.97zM7.82 15C7.4 16.15 6.28 17 5 17c-1.63 0-3-1.37-3-3s1.37-3 3-3c1.28 0 2.4.85 2.82 2H5v2h2.82zM19 17c-1.66 0-3-1.34-3-3s1.34-3 3-3 3 1.34 3 3-1.34 3-3 3z\"/></symbol><symbol viewBox=\"0 0 24 24\" id=\"ic_note_add_24px\"><path d=\"M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 14h-3v3h-2v-3H8v-2h3v-3h2v3h3v2zm-3-7V3.5L18.5 9H13z\"/></symbol><symbol viewBox=\"0 0 24 24\" id=\"ic_offline_pin_24px\"><path d=\"M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10 10-4.5 10-10S17.5 2 12 2zm5 16H7v-2h10v2zm-6.7-4L7 10.7l1.4-1.4 1.9 1.9 5.3-5.3L17 7.3 10.3 14z\"/></symbol><symbol viewBox=\"0 0 24 24\" id=\"ic_opacity_24px\"><path d=\"M17.66 8L12 2.35 6.34 8A8.02 8.02 0 0 0 4 13.64c0 2 .78 4.11 2.34 5.67a7.99 7.99 0 0 0 11.32 0c1.56-1.56 2.34-3.67 2.34-5.67S19.22 9.56 17.66 8zM6 14c.01-2 .62-3.27 1.76-4.4L12 5.27l4.24 4.38C17.38 10.77 17.99 12 18 14H6z\"/></symbol><symbol viewBox=\"0 0 24 24\" id=\"ic_open_in_browser_24px\"><path d=\"M19 4H5a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h4v-2H5V8h14v10h-4v2h4c1.1 0 2-.9 2-2V6a2 2 0 0 0-2-2zm-7 6l-4 4h3v6h2v-6h3l-4-4z\"/></symbol><symbol viewBox=\"0 0 24 24\" id=\"ic_open_in_new_24px\"><path d=\"M19 19H5V5h7V3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14c1.1 0 2-.9 2-2v-7h-2v7zM14 3v2h3.59l-9.83 9.83 1.41 1.41L19 6.41V10h2V3h-7z\"/></symbol><symbol viewBox=\"0 0 24 24\" id=\"ic_open_with_24px\"><path d=\"M10 9h4V6h3l-5-5-5 5h3v3zm-1 1H6V7l-5 5 5 5v-3h3v-4zm14 2l-5-5v3h-3v4h3v3l5-5zm-9 3h-4v3H7l5 5 5-5h-3v-3z\"/></symbol><symbol viewBox=\"0 0 24 24\" id=\"ic_pageview_24px\"><path d=\"M11.5 9a2.5 2.5 0 0 0 0 5 2.5 2.5 0 0 0 0-5zM20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm-3.21 14.21l-2.91-2.91c-.69.44-1.51.7-2.39.7C9.01 16 7 13.99 7 11.5S9.01 7 11.5 7 16 9.01 16 11.5c0 .88-.26 1.69-.7 2.39l2.91 2.9-1.42 1.42z\"/></symbol><symbol viewBox=\"0 0 24 24\" id=\"ic_pan_tool_24px\"><path d=\"M23 5.5V20c0 2.2-1.8 4-4 4h-7.3c-1.08 0-2.1-.43-2.85-1.19L1 14.83s1.26-1.23 1.3-1.25c.22-.19.49-.29.79-.29.22 0 .42.06.6.16.04.01 4.31 2.46 4.31 2.46V4c0-.83.67-1.5 1.5-1.5S11 3.17 11 4v7h1V1.5c0-.83.67-1.5 1.5-1.5S15 .67 15 1.5V11h1V2.5c0-.83.67-1.5 1.5-1.5s1.5.67 1.5 1.5V11h1V5.5c0-.83.67-1.5 1.5-1.5s1.5.67 1.5 1.5z\"/></symbol><symbol viewBox=\"0 0 24 24\" id=\"ic_payment_24px\"><path d=\"M20 4H4c-1.11 0-1.99.89-1.99 2L2 18c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V6c0-1.11-.89-2-2-2zm0 14H4v-6h16v6zm0-10H4V6h16v2z\"/></symbol><symbol viewBox=\"0 0 24 24\" id=\"ic_perm_camera_mic_24px\"><path d=\"M20 5h-3.17L15 3H9L7.17 5H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h7v-2.09c-2.83-.48-5-2.94-5-5.91h2c0 2.21 1.79 4 4 4s4-1.79 4-4h2c0 2.97-2.17 5.43-5 5.91V21h7c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm-6 8c0 1.1-.9 2-2 2s-2-.9-2-2V9c0-1.1.9-2 2-2s2 .9 2 2v4z\"/></symbol><symbol viewBox=\"0 0 24 24\" id=\"ic_perm_contact_calendar_24px\"><path d=\"M19 3h-1V1h-2v2H8V1H6v2H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm6 12H6v-1c0-2 4-3.1 6-3.1s6 1.1 6 3.1v1z\"/></symbol><symbol viewBox=\"0 0 24 24\" id=\"ic_perm_data_setting_24px\"><path d=\"M18.99 11.5c.34 0 .67.03 1 .07L20 0 0 20h11.56c-.04-.33-.07-.66-.07-1 0-4.14 3.36-7.5 7.5-7.5zm3.71 7.99c.02-.16.04-.32.04-.49 0-.17-.01-.33-.04-.49l1.06-.83a.26.26 0 0 0 .06-.32l-1-1.73c-.06-.11-.19-.15-.31-.11l-1.24.5c-.26-.2-.54-.37-.85-.49l-.19-1.32c-.01-.12-.12-.21-.24-.21h-2c-.12 0-.23.09-.25.21l-.19 1.32c-.3.13-.59.29-.85.49l-1.24-.5c-.11-.04-.24 0-.31.11l-1 1.73c-.06.11-.04.24.06.32l1.06.83a3.908 3.908 0 0 0 0 .98l-1.06.83a.26.26 0 0 0-.06.32l1 1.73c.06.11.19.15.31.11l1.24-.5c.26.2.54.37.85.49l.19 1.32c.02.12.12.21.25.21h2c.12 0 .23-.09.25-.21l.19-1.32c.3-.13.59-.29.84-.49l1.25.5c.11.04.24 0 .31-.11l1-1.73a.26.26 0 0 0-.06-.32l-1.07-.83zm-3.71 1.01c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5z\"/></symbol><symbol viewBox=\"0 0 24 24\" id=\"ic_perm_device_information_24px\"><path d=\"M13 7h-2v2h2V7zm0 4h-2v6h2v-6zm4-9.99L7 1c-1.1 0-2 .9-2 2v18c0 1.1.9 2 2 2h10c1.1 0 2-.9 2-2V3c0-1.1-.9-1.99-2-1.99zM17 19H7V5h10v14z\"/></symbol><symbol viewBox=\"0 0 24 24\" id=\"ic_perm_identity_24px\"><path d=\"M12 5.9a2.1 2.1 0 1 1 0 4.2 2.1 2.1 0 0 1 0-4.2m0 9c2.97 0 6.1 1.46 6.1 2.1v1.1H5.9V17c0-.64 3.13-2.1 6.1-2.1M12 4C9.79 4 8 5.79 8 8s1.79 4 4 4 4-1.79 4-4-1.79-4-4-4zm0 9c-2.67 0-8 1.34-8 4v3h16v-3c0-2.66-5.33-4-8-4z\"/></symbol><symbol viewBox=\"0 0 24 24\" id=\"ic_perm_media_24px\"><path d=\"M2 6H0v5h.01L0 20c0 1.1.9 2 2 2h18v-2H2V6zm20-2h-8l-2-2H6c-1.1 0-1.99.9-1.99 2L4 16c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zM7 15l4.5-6 3.5 4.51 2.5-3.01L21 15H7z\"/></symbol><symbol viewBox=\"0 0 24 24\" id=\"ic_perm_phone_msg_24px\"><path d=\"M20 15.5c-1.25 0-2.45-.2-3.57-.57a1.02 1.02 0 0 0-1.02.24l-2.2 2.2a15.074 15.074 0 0 1-6.59-6.58l2.2-2.21c.28-.27.36-.66.25-1.01A11.36 11.36 0 0 1 8.5 4c0-.55-.45-1-1-1H4c-.55 0-1 .45-1 1 0 9.39 7.61 17 17 17 .55 0 1-.45 1-1v-3.5c0-.55-.45-1-1-1zM12 3v10l3-3h6V3h-9z\"/></symbol><symbol viewBox=\"0 0 24 24\" id=\"ic_perm_scan_wifi_24px\"><path d=\"M12 3C6.95 3 3.15 4.85 0 7.23L12 22 24 7.25C20.85 4.87 17.05 3 12 3zm1 13h-2v-6h2v6zm-2-8V6h2v2h-2z\"/></symbol><symbol viewBox=\"0 0 24 24\" id=\"ic_pets_24px\"><circle cx=\"4.5\" cy=\"9.5\" r=\"2.5\"/><circle cx=\"9\" cy=\"5.5\" r=\"2.5\"/><circle cx=\"15\" cy=\"5.5\" r=\"2.5\"/><circle cx=\"19.5\" cy=\"9.5\" r=\"2.5\"/><path d=\"M17.34 14.86c-.87-1.02-1.6-1.89-2.48-2.91-.46-.54-1.05-1.08-1.75-1.32-.11-.04-.22-.07-.33-.09-.25-.04-.52-.04-.78-.04s-.53 0-.79.05c-.11.02-.22.05-.33.09-.7.24-1.28.78-1.75 1.32-.87 1.02-1.6 1.89-2.48 2.91-1.31 1.31-2.92 2.76-2.62 4.79.29 1.02 1.02 2.03 2.33 2.32.73.15 3.06-.44 5.54-.44h.18c2.48 0 4.81.58 5.54.44 1.31-.29 2.04-1.31 2.33-2.32.31-2.04-1.3-3.49-2.61-4.8z\"/></symbol><symbol viewBox=\"0 0 24 24\" id=\"ic_picture_in_picture_24px\"><path d=\"M19 7h-8v6h8V7zm2-4H3c-1.1 0-2 .9-2 2v14c0 1.1.9 1.98 2 1.98h18c1.1 0 2-.88 2-1.98V5c0-1.1-.9-2-2-2zm0 16.01H3V4.98h18v14.03z\"/></symbol><symbol viewBox=\"0 0 24 24\" id=\"ic_picture_in_picture_alt_24px\"><path d=\"M19 11h-8v6h8v-6zm4 8V4.98C23 3.88 22.1 3 21 3H3c-1.1 0-2 .88-2 1.98V19c0 1.1.9 2 2 2h18c1.1 0 2-.9 2-2zm-2 .02H3V4.97h18v14.05z\"/></symbol><symbol viewBox=\"0 0 24 24\" id=\"ic_play_for_work_24px\"><path d=\"M11 5v5.59H7.5l4.5 4.5 4.5-4.5H13V5h-2zm-5 9c0 3.31 2.69 6 6 6s6-2.69 6-6h-2c0 2.21-1.79 4-4 4s-4-1.79-4-4H6z\"/></symbol><symbol viewBox=\"0 0 24 24\" id=\"ic_polymer_24px\"><path d=\"M19 4h-4L7.11 16.63 4.5 12 9 4H5L.5 12 5 20h4l7.89-12.63L19.5 12 15 20h4l4.5-8z\"/></symbol><symbol viewBox=\"0 0 24 24\" id=\"ic_power_settings_new_24px\"><path d=\"M13 3h-2v10h2V3zm4.83 2.17l-1.42 1.42A6.92 6.92 0 0 1 19 12c0 3.87-3.13 7-7 7A6.995 6.995 0 0 1 7.58 6.58L6.17 5.17A8.932 8.932 0 0 0 3 12a9 9 0 0 0 18 0c0-2.74-1.23-5.18-3.17-6.83z\"/></symbol><symbol viewBox=\"0 0 24 24\" id=\"ic_pregnant_woman_24px\"><path d=\"M9 4c0-1.11.89-2 2-2s2 .89 2 2-.89 2-2 2-2-.89-2-2zm7 9a3.285 3.285 0 0 0-2-3c0-1.66-1.34-3-3-3s-3 1.34-3 3v7h2v5h3v-5h3v-4z\"/></symbol><symbol viewBox=\"0 0 24 24\" id=\"ic_print_24px\"><path d=\"M19 8H5c-1.66 0-3 1.34-3 3v6h4v4h12v-4h4v-6c0-1.66-1.34-3-3-3zm-3 11H8v-5h8v5zm3-7c-.55 0-1-.45-1-1s.45-1 1-1 1 .45 1 1-.45 1-1 1zm-1-9H6v4h12V3z\"/></symbol><symbol viewBox=\"0 0 24 24\" id=\"ic_query_builder_24px\"><path d=\"M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67z\"/></symbol><symbol viewBox=\"0 0 24 24\" id=\"ic_question_answer_24px\"><path d=\"M21 6h-2v9H6v2c0 .55.45 1 1 1h11l4 4V7c0-.55-.45-1-1-1zm-4 6V3c0-.55-.45-1-1-1H3c-.55 0-1 .45-1 1v14l4-4h10c.55 0 1-.45 1-1z\"/></symbol><symbol viewBox=\"0 0 24 24\" id=\"ic_receipt_24px\"><path d=\"M18 17H6v-2h12v2zm0-4H6v-2h12v2zm0-4H6V7h12v2zM3 22l1.5-1.5L6 22l1.5-1.5L9 22l1.5-1.5L12 22l1.5-1.5L15 22l1.5-1.5L18 22l1.5-1.5L21 22V2l-1.5 1.5L18 2l-1.5 1.5L15 2l-1.5 1.5L12 2l-1.5 1.5L9 2 7.5 3.5 6 2 4.5 3.5 3 2v20z\"/></symbol><symbol viewBox=\"0 0 24 24\" id=\"ic_record_voice_over_24px\"><circle cx=\"9\" cy=\"9\" r=\"4\"/><path d=\"M9 15c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4zm7.76-9.64l-1.68 1.69c.84 1.18.84 2.71 0 3.89l1.68 1.69c2.02-2.02 2.02-5.07 0-7.27zM20.07 2l-1.63 1.63c2.77 3.02 2.77 7.56 0 10.74L20.07 16c3.9-3.89 3.91-9.95 0-14z\"/></symbol><symbol viewBox=\"0 0 24 24\" id=\"ic_redeem_24px\"><path d=\"M20 6h-2.18c.11-.31.18-.65.18-1a2.996 2.996 0 0 0-5.5-1.65l-.5.67-.5-.68A3.01 3.01 0 0 0 9 2C7.34 2 6 3.34 6 5c0 .35.07.69.18 1H4c-1.11 0-1.99.89-1.99 2L2 19c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V8c0-1.11-.89-2-2-2zm-5-2c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1zM9 4c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1zm11 15H4v-2h16v2zm0-5H4V8h5.08L7 10.83 8.62 12 11 8.76l1-1.36 1 1.36L15.38 12 17 10.83 14.92 8H20v6z\"/></symbol><symbol viewBox=\"0 0 24 24\" id=\"ic_remove_shopping_cart_24px\"><path d=\"M22.73 22.73L2.77 2.77 2 2l-.73-.73L0 2.54l4.39 4.39 2.21 4.66-1.35 2.45c-.16.28-.25.61-.25.96 0 1.1.9 2 2 2h7.46l1.38 1.38A1.997 1.997 0 0 0 17 22c.67 0 1.26-.33 1.62-.84L21.46 24l1.27-1.27zM7.42 15c-.14 0-.25-.11-.25-.25l.03-.12.9-1.63h2.36l2 2H7.42zm8.13-2c.75 0 1.41-.41 1.75-1.03l3.58-6.49A1.003 1.003 0 0 0 20 4H6.54l9.01 9zM7 18c-1.1 0-1.99.9-1.99 2S5.9 22 7 22s2-.9 2-2-.9-2-2-2z\"/></symbol><symbol viewBox=\"0 0 24 24\" id=\"ic_reorder_24px\"><path d=\"M3 15h18v-2H3v2zm0 4h18v-2H3v2zm0-8h18V9H3v2zm0-6v2h18V5H3z\"/></symbol><symbol viewBox=\"0 0 24 24\" id=\"ic_report_problem_24px\"><path d=\"M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z\"/></symbol><symbol viewBox=\"0 0 24 24\" id=\"ic_restore_24px\"><path d=\"M13 3a9 9 0 0 0-9 9H1l3.89 3.89.07.14L9 12H6c0-3.87 3.13-7 7-7s7 3.13 7 7-3.13 7-7 7c-1.93 0-3.68-.79-4.94-2.06l-1.42 1.42A8.954 8.954 0 0 0 13 21a9 9 0 0 0 0-18zm-1 5v5l4.28 2.54.72-1.21-3.5-2.08V8H12z\"/></symbol><symbol viewBox=\"0 0 24 24\" id=\"ic_restore_page_24px\"><path d=\"M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm-2 16c-2.05 0-3.81-1.24-4.58-3h1.71c.63.9 1.68 1.5 2.87 1.5 1.93 0 3.5-1.57 3.5-3.5S13.93 9.5 12 9.5a3.5 3.5 0 0 0-3.1 1.9l1.6 1.6h-4V9l1.3 1.3C8.69 8.92 10.23 8 12 8c2.76 0 5 2.24 5 5s-2.24 5-5 5z\"/></symbol><symbol viewBox=\"0 0 24 24\" id=\"ic_room_24px\"><path d=\"M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5a2.5 2.5 0 0 1 0-5 2.5 2.5 0 0 1 0 5z\"/></symbol><symbol viewBox=\"0 0 24 24\" id=\"ic_rounded_corner_24px\"><path d=\"M19 19h2v2h-2v-2zm0-2h2v-2h-2v2zM3 13h2v-2H3v2zm0 4h2v-2H3v2zm0-8h2V7H3v2zm0-4h2V3H3v2zm4 0h2V3H7v2zm8 16h2v-2h-2v2zm-4 0h2v-2h-2v2zm4 0h2v-2h-2v2zm-8 0h2v-2H7v2zm-4 0h2v-2H3v2zM21 8c0-2.76-2.24-5-5-5h-5v2h5c1.65 0 3 1.35 3 3v5h2V8z\"/></symbol><symbol viewBox=\"0 0 24 24\" id=\"ic_rowing_24px\"><path d=\"M8.5 14.5L4 19l1.5 1.5L9 17h2l-2.5-2.5zM15 1c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm6 20.01L18 24l-2.99-3.01V19.5l-7.1-7.09c-.31.05-.61.07-.91.07v-2.16c1.66.03 3.61-.87 4.67-2.04l1.4-1.55c.19-.21.43-.38.69-.5.29-.14.62-.23.96-.23h.03C15.99 6.01 17 7.02 17 8.26v5.75a3 3 0 0 1-.92 2.16l-3.58-3.58v-2.27c-.63.52-1.43 1.02-2.29 1.39L16.5 18H18l3 3.01z\"/></symbol><symbol viewBox=\"0 0 24 24\" id=\"ic_schedule_24px\"><path d=\"M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67z\"/></symbol><symbol viewBox=\"0 0 24 24\" id=\"ic_search_24px\"><path d=\"M15.5 14h-.79l-.28-.27A6.47 6.47 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z\"/></symbol><symbol viewBox=\"0 0 24 24\" id=\"ic_settings_24px\"><path d=\"M19.43 12.98c.04-.32.07-.64.07-.98s-.03-.66-.07-.98l2.11-1.65c.19-.15.24-.42.12-.64l-2-3.46c-.12-.22-.39-.3-.61-.22l-2.49 1c-.52-.4-1.08-.73-1.69-.98l-.38-2.65A.488.488 0 0 0 14 2h-4c-.25 0-.46.18-.49.42l-.38 2.65c-.61.25-1.17.59-1.69.98l-2.49-1c-.23-.09-.49 0-.61.22l-2 3.46c-.13.22-.07.49.12.64l2.11 1.65c-.04.32-.07.65-.07.98s.03.66.07.98l-2.11 1.65c-.19.15-.24.42-.12.64l2 3.46c.12.22.39.3.61.22l2.49-1c.52.4 1.08.73 1.69.98l.38 2.65c.03.24.24.42.49.42h4c.25 0 .46-.18.49-.42l.38-2.65c.61-.25 1.17-.59 1.69-.98l2.49 1c.23.09.49 0 .61-.22l2-3.46c.12-.22.07-.49-.12-.64l-2.11-1.65zM12 15.5c-1.93 0-3.5-1.57-3.5-3.5s1.57-3.5 3.5-3.5 3.5 1.57 3.5 3.5-1.57 3.5-3.5 3.5z\"/></symbol><symbol viewBox=\"0 0 24 24\" id=\"ic_settings_applications_24px\"><path d=\"M12 10c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm7-7H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2zm-1.75 9c0 .23-.02.46-.05.68l1.48 1.16c.13.11.17.3.08.45l-1.4 2.42c-.09.15-.27.21-.43.15l-1.74-.7c-.36.28-.76.51-1.18.69l-.26 1.85c-.03.17-.18.3-.35.3h-2.8c-.17 0-.32-.13-.35-.29l-.26-1.85c-.43-.18-.82-.41-1.18-.69l-1.74.7c-.16.06-.34 0-.43-.15l-1.4-2.42a.353.353 0 0 1 .08-.45l1.48-1.16c-.03-.23-.05-.46-.05-.69 0-.23.02-.46.05-.68l-1.48-1.16a.353.353 0 0 1-.08-.45l1.4-2.42c.09-.15.27-.21.43-.15l1.74.7c.36-.28.76-.51 1.18-.69l.26-1.85c.03-.17.18-.3.35-.3h2.8c.17 0 .32.13.35.29l.26 1.85c.43.18.82.41 1.18.69l1.74-.7c.16-.06.34 0 .43.15l1.4 2.42c.09.15.05.34-.08.45l-1.48 1.16c.03.23.05.46.05.69z\"/></symbol><symbol viewBox=\"0 0 24 24\" id=\"ic_settings_backup_restore_24px\"><path d=\"M14 12c0-1.1-.9-2-2-2s-2 .9-2 2 .9 2 2 2 2-.9 2-2zm-2-9a9 9 0 0 0-9 9H0l4 4 4-4H5c0-3.87 3.13-7 7-7s7 3.13 7 7a6.995 6.995 0 0 1-11.06 5.7l-1.42 1.44A9 9 0 1 0 12 3z\"/></symbol><symbol viewBox=\"0 0 24 24\" id=\"ic_settings_bluetooth_24px\"><path d=\"M11 24h2v-2h-2v2zm-4 0h2v-2H7v2zm8 0h2v-2h-2v2zm2.71-18.29L12 0h-1v7.59L6.41 3 5 4.41 10.59 10 5 15.59 6.41 17 11 12.41V20h1l5.71-5.71-4.3-4.29 4.3-4.29zM13 3.83l1.88 1.88L13 7.59V3.83zm1.88 10.46L13 16.17v-3.76l1.88 1.88z\"/></symbol><symbol viewBox=\"0 0 24 24\" id=\"ic_settings_brightness_24px\"><path d=\"M21 3H3c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h18c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16.01H3V4.99h18v14.02zM8 16h2.5l1.5 1.5 1.5-1.5H16v-2.5l1.5-1.5-1.5-1.5V8h-2.5L12 6.5 10.5 8H8v2.5L6.5 12 8 13.5V16zm4-7c1.66 0 3 1.34 3 3s-1.34 3-3 3V9z\"/></symbol><symbol viewBox=\"0 0 24 24\" id=\"ic_settings_cell_24px\"><path d=\"M7 24h2v-2H7v2zm4 0h2v-2h-2v2zm4 0h2v-2h-2v2zM16 .01L8 0C6.9 0 6 .9 6 2v16c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V2c0-1.1-.9-1.99-2-1.99zM16 16H8V4h8v12z\"/></symbol><symbol viewBox=\"0 0 24 24\" id=\"ic_settings_ethernet_24px\"><path d=\"M7.77 6.76L6.23 5.48.82 12l5.41 6.52 1.54-1.28L3.42 12l4.35-5.24zM7 13h2v-2H7v2zm10-2h-2v2h2v-2zm-6 2h2v-2h-2v2zm6.77-7.52l-1.54 1.28L20.58 12l-4.35 5.24 1.54 1.28L23.18 12l-5.41-6.52z\"/></symbol><symbol viewBox=\"0 0 24 24\" id=\"ic_settings_input_antenna_24px\"><path d=\"M12 5c-3.87 0-7 3.13-7 7h2c0-2.76 2.24-5 5-5s5 2.24 5 5h2c0-3.87-3.13-7-7-7zm1 9.29c.88-.39 1.5-1.26 1.5-2.29a2.5 2.5 0 0 0-5 0c0 1.02.62 1.9 1.5 2.29v3.3L7.59 21 9 22.41l3-3 3 3L16.41 21 13 17.59v-3.3zM12 1C5.93 1 1 5.93 1 12h2a9 9 0 0 1 18 0h2c0-6.07-4.93-11-11-11z\"/></symbol><symbol viewBox=\"0 0 24 24\" id=\"ic_settings_input_component_24px\"><path d=\"M5 2c0-.55-.45-1-1-1s-1 .45-1 1v4H1v6h6V6H5V2zm4 14c0 1.3.84 2.4 2 2.82V23h2v-4.18c1.16-.41 2-1.51 2-2.82v-2H9v2zm-8 0c0 1.3.84 2.4 2 2.82V23h2v-4.18C6.16 18.4 7 17.3 7 16v-2H1v2zM21 6V2c0-.55-.45-1-1-1s-1 .45-1 1v4h-2v6h6V6h-2zm-8-4c0-.55-.45-1-1-1s-1 .45-1 1v4H9v6h6V6h-2V2zm4 14c0 1.3.84 2.4 2 2.82V23h2v-4.18c1.16-.41 2-1.51 2-2.82v-2h-6v2z\"/></symbol><symbol viewBox=\"0 0 24 24\" id=\"ic_settings_input_composite_24px\"><path d=\"M5 2c0-.55-.45-1-1-1s-1 .45-1 1v4H1v6h6V6H5V2zm4 14c0 1.3.84 2.4 2 2.82V23h2v-4.18c1.16-.41 2-1.51 2-2.82v-2H9v2zm-8 0c0 1.3.84 2.4 2 2.82V23h2v-4.18C6.16 18.4 7 17.3 7 16v-2H1v2zM21 6V2c0-.55-.45-1-1-1s-1 .45-1 1v4h-2v6h6V6h-2zm-8-4c0-.55-.45-1-1-1s-1 .45-1 1v4H9v6h6V6h-2V2zm4 14c0 1.3.84 2.4 2 2.82V23h2v-4.18c1.16-.41 2-1.51 2-2.82v-2h-6v2z\"/></symbol><symbol viewBox=\"0 0 24 24\" id=\"ic_settings_input_hdmi_24px\"><path d=\"M18 7V4c0-1.1-.9-2-2-2H8c-1.1 0-2 .9-2 2v3H5v6l3 6v3h8v-3l3-6V7h-1zM8 4h8v3h-2V5h-1v2h-2V5h-1v2H8V4z\"/></symbol><symbol viewBox=\"0 0 24 24\" id=\"ic_settings_input_svideo_24px\"><path d=\"M8 11.5c0-.83-.67-1.5-1.5-1.5S5 10.67 5 11.5 5.67 13 6.5 13 8 12.33 8 11.5zm7-5c0-.83-.67-1.5-1.5-1.5h-3C9.67 5 9 5.67 9 6.5S9.67 8 10.5 8h3c.83 0 1.5-.67 1.5-1.5zM8.5 15c-.83 0-1.5.67-1.5 1.5S7.67 18 8.5 18s1.5-.67 1.5-1.5S9.33 15 8.5 15zM12 1C5.93 1 1 5.93 1 12s4.93 11 11 11 11-4.93 11-11S18.07 1 12 1zm0 20c-4.96 0-9-4.04-9-9s4.04-9 9-9 9 4.04 9 9-4.04 9-9 9zm5.5-11c-.83 0-1.5.67-1.5 1.5s.67 1.5 1.5 1.5 1.5-.67 1.5-1.5-.67-1.5-1.5-1.5zm-2 5c-.83 0-1.5.67-1.5 1.5s.67 1.5 1.5 1.5 1.5-.67 1.5-1.5-.67-1.5-1.5-1.5z\"/></symbol><symbol viewBox=\"0 0 24 24\" id=\"ic_settings_overscan_24px\"><path d=\"M12.01 5.5L10 8h4l-1.99-2.5zM18 10v4l2.5-1.99L18 10zM6 10l-2.5 2.01L6 14v-4zm8 6h-4l2.01 2.5L14 16zm7-13H3c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h18c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16.01H3V4.99h18v14.02z\"/></symbol><symbol viewBox=\"0 0 24 24\" id=\"ic_settings_phone_24px\"><path d=\"M13 9h-2v2h2V9zm4 0h-2v2h2V9zm3 6.5c-1.25 0-2.45-.2-3.57-.57a1.02 1.02 0 0 0-1.02.24l-2.2 2.2a15.074 15.074 0 0 1-6.59-6.58l2.2-2.21c.28-.27.36-.66.25-1.01A11.36 11.36 0 0 1 8.5 4c0-.55-.45-1-1-1H4c-.55 0-1 .45-1 1 0 9.39 7.61 17 17 17 .55 0 1-.45 1-1v-3.5c0-.55-.45-1-1-1zM19 9v2h2V9h-2z\"/></symbol><symbol viewBox=\"0 0 24 24\" id=\"ic_settings_power_24px\"><path d=\"M7 24h2v-2H7v2zm4 0h2v-2h-2v2zm2-22h-2v10h2V2zm3.56 2.44l-1.45 1.45A5.97 5.97 0 0 1 18 11c0 3.31-2.69 6-6 6s-6-2.69-6-6c0-2.17 1.16-4.06 2.88-5.12L7.44 4.44A7.96 7.96 0 0 0 4 11c0 4.42 3.58 8 8 8s8-3.58 8-8a7.96 7.96 0 0 0-3.44-6.56zM15 24h2v-2h-2v2z\"/></symbol><symbol viewBox=\"0 0 24 24\" id=\"ic_settings_remote_24px\"><path d=\"M15 9H9c-.55 0-1 .45-1 1v12c0 .55.45 1 1 1h6c.55 0 1-.45 1-1V10c0-.55-.45-1-1-1zm-3 6c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zM7.05 6.05l1.41 1.41a5.022 5.022 0 0 1 7.08 0l1.41-1.41C15.68 4.78 13.93 4 12 4s-3.68.78-4.95 2.05zM12 0C8.96 0 6.21 1.23 4.22 3.22l1.41 1.41C7.26 3.01 9.51 2 12 2s4.74 1.01 6.36 2.64l1.41-1.41C17.79 1.23 15.04 0 12 0z\"/></symbol><symbol viewBox=\"0 0 24 24\" id=\"ic_settings_voice_24px\"><path d=\"M7 24h2v-2H7v2zm5-11c1.66 0 2.99-1.34 2.99-3L15 4c0-1.66-1.34-3-3-3S9 2.34 9 4v6c0 1.66 1.34 3 3 3zm-1 11h2v-2h-2v2zm4 0h2v-2h-2v2zm4-14h-1.7c0 3-2.54 5.1-5.3 5.1S6.7 13 6.7 10H5c0 3.41 2.72 6.23 6 6.72V20h2v-3.28c3.28-.49 6-3.31 6-6.72z\"/></symbol><symbol viewBox=\"0 0 24 24\" id=\"ic_shop_24px\"><path d=\"M16 6V4c0-1.11-.89-2-2-2h-4c-1.11 0-2 .89-2 2v2H2v13c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V6h-6zm-6-2h4v2h-4V4zM9 18V9l7.5 4L9 18z\"/></symbol><symbol viewBox=\"0 0 24 24\" id=\"ic_shop_two_24px\"><path d=\"M3 9H1v11c0 1.11.89 2 2 2h14c1.11 0 2-.89 2-2H3V9zm15-4V3c0-1.11-.89-2-2-2h-4c-1.11 0-2 .89-2 2v2H5v11c0 1.11.89 2 2 2h14c1.11 0 2-.89 2-2V5h-5zm-6-2h4v2h-4V3zm0 12V8l5.5 3-5.5 4z\"/></symbol><symbol viewBox=\"0 0 24 24\" id=\"ic_shopping_basket_24px\"><path d=\"M17.21 9l-4.38-6.56a.993.993 0 0 0-.83-.42c-.32 0-.64.14-.83.43L6.79 9H2c-.55 0-1 .45-1 1 0 .09.01.18.04.27l2.54 9.27c.23.84 1 1.46 1.92 1.46h13c.92 0 1.69-.62 1.93-1.46l2.54-9.27L23 10c0-.55-.45-1-1-1h-4.79zM9 9l3-4.4L15 9H9zm3 8c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2z\"/></symbol><symbol viewBox=\"0 0 24 24\" id=\"ic_shopping_cart_24px\"><path d=\"M7 18c-1.1 0-1.99.9-1.99 2S5.9 22 7 22s2-.9 2-2-.9-2-2-2zM1 2v2h2l3.6 7.59-1.35 2.45c-.16.28-.25.61-.25.96 0 1.1.9 2 2 2h12v-2H7.42c-.14 0-.25-.11-.25-.25l.03-.12.9-1.63h7.45c.75 0 1.41-.41 1.75-1.03l3.58-6.49A1.003 1.003 0 0 0 20 4H5.21l-.94-2H1zm16 16c-1.1 0-1.99.9-1.99 2s.89 2 1.99 2 2-.9 2-2-.9-2-2-2z\"/></symbol><symbol viewBox=\"0 0 24 24\" id=\"ic_speaker_notes_24px\"><path d=\"M20 2H4c-1.1 0-1.99.9-1.99 2L2 22l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zM8 14H6v-2h2v2zm0-3H6V9h2v2zm0-3H6V6h2v2zm7 6h-5v-2h5v2zm3-3h-8V9h8v2zm0-3h-8V6h8v2z\"/></symbol><symbol viewBox=\"0 0 24 24\" id=\"ic_speaker_notes_off_24px\"><path d=\"M10.54 11l-.54-.54L7.54 8 6 6.46 2.38 2.84 1.27 1.73 0 3l2.01 2.01L2 22l4-4h9l5.73 5.73L22 22.46 17.54 18l-7-7zM8 14H6v-2h2v2zm-2-3V9l2 2H6zm14-9H4.08L10 7.92V6h8v2h-7.92l1 1H18v2h-4.92l6.99 6.99C21.14 17.95 22 17.08 22 16V4c0-1.1-.9-2-2-2z\"/></symbol><symbol viewBox=\"0 0 24 24\" id=\"ic_spellcheck_24px\"><path d=\"M12.45 16h2.09L9.43 3H7.57L2.46 16h2.09l1.12-3h5.64l1.14 3zm-6.02-5L8.5 5.48 10.57 11H6.43zm15.16.59l-8.09 8.09L9.83 16l-1.41 1.41 5.09 5.09L23 13l-1.41-1.41z\"/></symbol><symbol viewBox=\"0 0 24 24\" id=\"ic_stars_24px\"><path d=\"M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zm4.24 16L12 15.45 7.77 18l1.12-4.81-3.73-3.23 4.92-.42L12 5l1.92 4.53 4.92.42-3.73 3.23L16.23 18z\"/></symbol><symbol viewBox=\"0 0 24 24\" id=\"ic_store_24px\"><path d=\"M20 4H4v2h16V4zm1 10v-2l-1-5H4l-1 5v2h1v6h10v-6h4v6h2v-6h1zm-9 4H6v-4h6v4z\"/></symbol><symbol viewBox=\"0 0 24 24\" id=\"ic_subject_24px\"><path d=\"M14 17H4v2h10v-2zm6-8H4v2h16V9zM4 15h16v-2H4v2zM4 5v2h16V5H4z\"/></symbol><symbol viewBox=\"0 0 24 24\" id=\"ic_supervisor_account_24px\"><path d=\"M16.5 12c1.38 0 2.49-1.12 2.49-2.5S17.88 7 16.5 7a2.5 2.5 0 0 0 0 5zM9 11c1.66 0 2.99-1.34 2.99-3S10.66 5 9 5C7.34 5 6 6.34 6 8s1.34 3 3 3zm7.5 3c-1.83 0-5.5.92-5.5 2.75V19h11v-2.25c0-1.83-3.67-2.75-5.5-2.75zM9 13c-2.33 0-7 1.17-7 3.5V19h7v-2.25c0-.85.33-2.34 2.37-3.47C10.5 13.1 9.66 13 9 13z\"/></symbol><symbol viewBox=\"0 0 24 24\" id=\"ic_swap_horiz_24px\"><path d=\"M6.99 11L3 15l3.99 4v-3H14v-2H6.99v-3zM21 9l-3.99-4v3H10v2h7.01v3L21 9z\"/></symbol><symbol viewBox=\"0 0 24 24\" id=\"ic_swap_vert_24px\"><path d=\"M16 17.01V10h-2v7.01h-3L15 21l4-3.99h-3zM9 3L5 6.99h3V14h2V6.99h3L9 3z\"/></symbol><symbol viewBox=\"0 0 24 24\" id=\"ic_swap_vertical_circle_24px\"><path d=\"M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zM6.5 9L10 5.5 13.5 9H11v4H9V9H6.5zm11 6L14 18.5 10.5 15H13v-4h2v4h2.5z\"/></symbol><symbol viewBox=\"0 0 24 24\" id=\"ic_system_update_alt_24px\"><path d=\"M12 16.5l4-4h-3v-9h-2v9H8l4 4zm9-13h-6v1.99h6v14.03H3V5.49h6V3.5H3c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h18c1.1 0 2-.9 2-2v-14c0-1.1-.9-2-2-2z\"/></symbol><symbol viewBox=\"0 0 24 24\" id=\"ic_tab_24px\"><path d=\"M21 3H3c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h18c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H3V5h10v4h8v10z\"/></symbol><symbol viewBox=\"0 0 24 24\" id=\"ic_tab_unselected_24px\"><path d=\"M1 9h2V7H1v2zm0 4h2v-2H1v2zm0-8h2V3c-1.1 0-2 .9-2 2zm8 16h2v-2H9v2zm-8-4h2v-2H1v2zm2 4v-2H1c0 1.1.9 2 2 2zM21 3h-8v6h10V5c0-1.1-.9-2-2-2zm0 14h2v-2h-2v2zM9 5h2V3H9v2zM5 21h2v-2H5v2zM5 5h2V3H5v2zm16 16c1.1 0 2-.9 2-2h-2v2zm0-8h2v-2h-2v2zm-8 8h2v-2h-2v2zm4 0h2v-2h-2v2z\"/></symbol><symbol viewBox=\"0 0 24 24\" id=\"ic_theaters_24px\"><path d=\"M18 3v2h-2V3H8v2H6V3H4v18h2v-2h2v2h8v-2h2v2h2V3h-2zM8 17H6v-2h2v2zm0-4H6v-2h2v2zm0-4H6V7h2v2zm10 8h-2v-2h2v2zm0-4h-2v-2h2v2zm0-4h-2V7h2v2z\"/></symbol><symbol viewBox=\"0 0 24 24\" id=\"ic_thumb_down_24px\"><path d=\"M15 3H6c-.83 0-1.54.5-1.84 1.22l-3.02 7.05c-.09.23-.14.47-.14.73v1.91l.01.01L1 14c0 1.1.9 2 2 2h6.31l-.95 4.57-.03.32c0 .41.17.79.44 1.06L9.83 23l6.59-6.59c.36-.36.58-.86.58-1.41V5c0-1.1-.9-2-2-2zm4 0v12h4V3h-4z\"/></symbol><symbol viewBox=\"0 0 24 24\" id=\"ic_thumb_up_24px\"><path d=\"M1 21h4V9H1v12zm22-11c0-1.1-.9-2-2-2h-6.31l.95-4.57.03-.32c0-.41-.17-.79-.44-1.06L14.17 1 7.59 7.59C7.22 7.95 7 8.45 7 9v10c0 1.1.9 2 2 2h9c.83 0 1.54-.5 1.84-1.22l3.02-7.05c.09-.23.14-.47.14-.73v-1.91l-.01-.01L23 10z\"/></symbol><symbol viewBox=\"0 0 24 24\" id=\"ic_thumbs_up_down_24px\"><path d=\"M12 6c0-.55-.45-1-1-1H5.82l.66-3.18.02-.23c0-.31-.13-.59-.33-.8L5.38 0 .44 4.94C.17 5.21 0 5.59 0 6v6.5c0 .83.67 1.5 1.5 1.5h6.75c.62 0 1.15-.38 1.38-.91l2.26-5.29c.07-.17.11-.36.11-.55V6zm10.5 4h-6.75c-.62 0-1.15.38-1.38.91l-2.26 5.29c-.07.17-.11.36-.11.55V18c0 .55.45 1 1 1h5.18l-.66 3.18-.02.24c0 .31.13.59.33.8l.79.78 4.94-4.94c.27-.27.44-.65.44-1.06v-6.5c0-.83-.67-1.5-1.5-1.5z\"/></symbol><symbol viewBox=\"0 0 24 24\" id=\"ic_timeline_24px\"><path d=\"M23 8c0 1.1-.9 2-2 2a1.7 1.7 0 0 1-.51-.07l-3.56 3.55c.05.16.07.34.07.52 0 1.1-.9 2-2 2s-2-.9-2-2c0-.18.02-.36.07-.52l-2.55-2.55c-.16.05-.34.07-.52.07s-.36-.02-.52-.07l-4.55 4.56c.05.16.07.33.07.51 0 1.1-.9 2-2 2s-2-.9-2-2 .9-2 2-2c.18 0 .35.02.51.07l4.56-4.55C8.02 9.36 8 9.18 8 9c0-1.1.9-2 2-2s2 .9 2 2c0 .18-.02.36-.07.52l2.55 2.55c.16-.05.34-.07.52-.07s.36.02.52.07l3.55-3.56A1.7 1.7 0 0 1 19 8c0-1.1.9-2 2-2s2 .9 2 2z\"/></symbol><symbol viewBox=\"0 0 24 24\" id=\"ic_toc_24px\"><path d=\"M3 9h14V7H3v2zm0 4h14v-2H3v2zm0 4h14v-2H3v2zm16 0h2v-2h-2v2zm0-10v2h2V7h-2zm0 6h2v-2h-2v2z\"/></symbol><symbol viewBox=\"0 0 24 24\" id=\"ic_today_24px\"><path d=\"M19 3h-1V1h-2v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19a2 2 0 0 0 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V8h14v11zM7 10h5v5H7z\"/></symbol><symbol viewBox=\"0 0 24 24\" id=\"ic_toll_24px\"><path d=\"M15 4c-4.42 0-8 3.58-8 8s3.58 8 8 8 8-3.58 8-8-3.58-8-8-8zm0 14c-3.31 0-6-2.69-6-6s2.69-6 6-6 6 2.69 6 6-2.69 6-6 6zM3 12a5.99 5.99 0 0 1 4-5.65V4.26C3.55 5.15 1 8.27 1 12s2.55 6.85 6 7.74v-2.09A5.99 5.99 0 0 1 3 12z\"/></symbol><symbol viewBox=\"0 0 24 24\" id=\"ic_touch_app_24px\"><path d=\"M9 11.24V7.5a2.5 2.5 0 0 1 5 0v3.74c1.21-.81 2-2.18 2-3.74C16 5.01 13.99 3 11.5 3S7 5.01 7 7.5c0 1.56.79 2.93 2 3.74zm9.84 4.63l-4.54-2.26c-.17-.07-.35-.11-.54-.11H13v-6c0-.83-.67-1.5-1.5-1.5S10 6.67 10 7.5v10.74l-3.43-.72c-.08-.01-.15-.03-.24-.03-.31 0-.59.13-.79.33l-.79.8 4.94 4.94c.27.27.65.44 1.06.44h6.79c.75 0 1.33-.55 1.44-1.28l.75-5.27c.01-.07.02-.14.02-.2 0-.62-.38-1.16-.91-1.38z\"/></symbol><symbol viewBox=\"0 0 24 24\" id=\"ic_track_changes_24px\"><path d=\"M19.07 4.93l-1.41 1.41A8.014 8.014 0 0 1 20 12c0 4.42-3.58 8-8 8s-8-3.58-8-8c0-4.08 3.05-7.44 7-7.93v2.02C8.16 6.57 6 9.03 6 12c0 3.31 2.69 6 6 6s6-2.69 6-6c0-1.66-.67-3.16-1.76-4.24l-1.41 1.41C15.55 9.9 16 10.9 16 12c0 2.21-1.79 4-4 4s-4-1.79-4-4c0-1.86 1.28-3.41 3-3.86v2.14c-.6.35-1 .98-1 1.72 0 1.1.9 2 2 2s2-.9 2-2c0-.74-.4-1.38-1-1.72V2h-1C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10a9.97 9.97 0 0 0-2.93-7.07z\"/></symbol><symbol viewBox=\"0 0 24 24\" id=\"ic_translate_24px\"><path d=\"M12.87 15.07l-2.54-2.51.03-.03A17.52 17.52 0 0 0 14.07 6H17V4h-7V2H8v2H1v1.99h11.17C11.5 7.92 10.44 9.75 9 11.35 8.07 10.32 7.3 9.19 6.69 8h-2c.73 1.63 1.73 3.17 2.98 4.56l-5.09 5.02L4 19l5-5 3.11 3.11.76-2.04zM18.5 10h-2L12 22h2l1.12-3h4.75L21 22h2l-4.5-12zm-2.62 7l1.62-4.33L19.12 17h-3.24z\"/></symbol><symbol viewBox=\"0 0 24 24\" id=\"ic_trending_down_24px\"><path d=\"M16 18l2.29-2.29-4.88-4.88-4 4L2 7.41 3.41 6l6 6 4-4 6.3 6.29L22 12v6z\"/></symbol><symbol viewBox=\"0 0 24 24\" id=\"ic_trending_flat_24px\"><path d=\"M22 12l-4-4v3H3v2h15v3z\"/></symbol><symbol viewBox=\"0 0 24 24\" id=\"ic_trending_up_24px\"><path d=\"M16 6l2.29 2.29-4.88 4.88-4-4L2 16.59 3.41 18l6-6 4 4 6.3-6.29L22 12V6z\"/></symbol><symbol viewBox=\"0 0 24 24\" id=\"ic_turned_in_24px\"><path d=\"M17 3H7c-1.1 0-1.99.9-1.99 2L5 21l7-3 7 3V5c0-1.1-.9-2-2-2z\"/></symbol><symbol viewBox=\"0 0 24 24\" id=\"ic_turned_in_not_24px\"><path d=\"M17 3H7c-1.1 0-1.99.9-1.99 2L5 21l7-3 7 3V5c0-1.1-.9-2-2-2zm0 15l-5-2.18L7 18V5h10v13z\"/></symbol><symbol viewBox=\"0 0 24 24\" id=\"ic_update_24px\"><path d=\"M21 10.12h-6.78l2.74-2.82c-2.73-2.7-7.15-2.8-9.88-.1a6.875 6.875 0 0 0 0 9.79 7.02 7.02 0 0 0 9.88 0C18.32 15.65 19 14.08 19 12.1h2c0 1.98-.88 4.55-2.64 6.29-3.51 3.48-9.21 3.48-12.72 0-3.5-3.47-3.53-9.11-.02-12.58a8.987 8.987 0 0 1 12.65 0L21 3v7.12zM12.5 8v4.25l3.5 2.08-.72 1.21L11 13V8h1.5z\"/></symbol><symbol viewBox=\"0 0 24 24\" id=\"ic_verified_user_24px\"><path d=\"M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm-2 16l-4-4 1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8z\"/></symbol><symbol viewBox=\"0 0 24 24\" id=\"ic_view_agenda_24px\"><path d=\"M20 13H3c-.55 0-1 .45-1 1v6c0 .55.45 1 1 1h17c.55 0 1-.45 1-1v-6c0-.55-.45-1-1-1zm0-10H3c-.55 0-1 .45-1 1v6c0 .55.45 1 1 1h17c.55 0 1-.45 1-1V4c0-.55-.45-1-1-1z\"/></symbol><symbol viewBox=\"0 0 24 24\" id=\"ic_view_array_24px\"><path d=\"M4 18h3V5H4v13zM18 5v13h3V5h-3zM8 18h9V5H8v13z\"/></symbol><symbol viewBox=\"0 0 24 24\" id=\"ic_view_carousel_24px\"><path d=\"M7 19h10V4H7v15zm-5-2h4V6H2v11zM18 6v11h4V6h-4z\"/></symbol><symbol viewBox=\"0 0 24 24\" id=\"ic_view_column_24px\"><path d=\"M10 18h5V5h-5v13zm-6 0h5V5H4v13zM16 5v13h5V5h-5z\"/></symbol><symbol viewBox=\"0 0 24 24\" id=\"ic_view_day_24px\"><path d=\"M2 21h19v-3H2v3zM20 8H3c-.55 0-1 .45-1 1v6c0 .55.45 1 1 1h17c.55 0 1-.45 1-1V9c0-.55-.45-1-1-1zM2 3v3h19V3H2z\"/></symbol><symbol viewBox=\"0 0 24 24\" id=\"ic_view_headline_24px\"><path d=\"M4 15h16v-2H4v2zm0 4h16v-2H4v2zm0-8h16V9H4v2zm0-6v2h16V5H4z\"/></symbol><symbol viewBox=\"0 0 24 24\" id=\"ic_view_list_24px\"><path d=\"M4 14h4v-4H4v4zm0 5h4v-4H4v4zM4 9h4V5H4v4zm5 5h12v-4H9v4zm0 5h12v-4H9v4zM9 5v4h12V5H9z\"/></symbol><symbol viewBox=\"0 0 24 24\" id=\"ic_view_module_24px\"><path d=\"M4 11h5V5H4v6zm0 7h5v-6H4v6zm6 0h5v-6h-5v6zm6 0h5v-6h-5v6zm-6-7h5V5h-5v6zm6-6v6h5V5h-5z\"/></symbol><symbol viewBox=\"0 0 24 24\" id=\"ic_view_quilt_24px\"><path d=\"M10 18h5v-6h-5v6zm-6 0h5V5H4v13zm12 0h5v-6h-5v6zM10 5v6h11V5H10z\"/></symbol><symbol viewBox=\"0 0 24 24\" id=\"ic_view_stream_24px\"><path d=\"M4 18h17v-6H4v6zM4 5v6h17V5H4z\"/></symbol><symbol viewBox=\"0 0 24 24\" id=\"ic_view_week_24px\"><path d=\"M6 5H3c-.55 0-1 .45-1 1v12c0 .55.45 1 1 1h3c.55 0 1-.45 1-1V6c0-.55-.45-1-1-1zm14 0h-3c-.55 0-1 .45-1 1v12c0 .55.45 1 1 1h3c.55 0 1-.45 1-1V6c0-.55-.45-1-1-1zm-7 0h-3c-.55 0-1 .45-1 1v12c0 .55.45 1 1 1h3c.55 0 1-.45 1-1V6c0-.55-.45-1-1-1z\"/></symbol><symbol viewBox=\"0 0 24 24\" id=\"ic_visibility_24px\"><path d=\"M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z\"/></symbol><symbol viewBox=\"0 0 24 24\" id=\"ic_visibility_off_24px\"><path d=\"M12 7c2.76 0 5 2.24 5 5 0 .65-.13 1.26-.36 1.83l2.92 2.92c1.51-1.26 2.7-2.89 3.43-4.75-1.73-4.39-6-7.5-11-7.5-1.4 0-2.74.25-3.98.7l2.16 2.16C10.74 7.13 11.35 7 12 7zM2 4.27l2.28 2.28.46.46A11.804 11.804 0 0 0 1 12c1.73 4.39 6 7.5 11 7.5 1.55 0 3.03-.3 4.38-.84l.42.42L19.73 22 21 20.73 3.27 3 2 4.27zM7.53 9.8l1.55 1.55c-.05.21-.08.43-.08.65 0 1.66 1.34 3 3 3 .22 0 .44-.03.65-.08l1.55 1.55c-.67.33-1.41.53-2.2.53-2.76 0-5-2.24-5-5 0-.79.2-1.53.53-2.2zm4.31-.78l3.15 3.15.02-.16c0-1.66-1.34-3-3-3l-.17.01z\"/></symbol><symbol viewBox=\"0 0 24 24\" id=\"ic_watch_later_24px\"><path d=\"M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10 10-4.5 10-10S17.5 2 12 2zm4.2 14.2L11 13V7h1.5v5.2l4.5 2.7-.8 1.3z\"/></symbol><symbol viewBox=\"0 0 24 24\" id=\"ic_work_24px\"><path d=\"M20 6h-4V4c0-1.11-.89-2-2-2h-4c-1.11 0-2 .89-2 2v2H4c-1.11 0-1.99.89-1.99 2L2 19c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V8c0-1.11-.89-2-2-2zm-6 0h-4V4h4v2z\"/></symbol><symbol viewBox=\"0 0 24 24\" id=\"ic_youtube_searched_for_24px\"><path d=\"M17.01 14h-.8l-.27-.27a6.45 6.45 0 0 0 1.57-4.23c0-3.59-2.91-6.5-6.5-6.5s-6.5 3-6.5 6.5H2l3.84 4 4.16-4H6.51a4.5 4.5 0 0 1 9 0 4.507 4.507 0 0 1-6.32 4.12L7.71 15.1a6.474 6.474 0 0 0 7.52-.67l.27.27v.79l5.01 4.99L22 19l-4.99-5z\"/></symbol><symbol viewBox=\"0 0 24 24\" id=\"ic_zoom_in_24px\"><path d=\"M15.5 14h-.79l-.28-.27A6.47 6.47 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14zm2.5-4h-2v2H9v-2H7V9h2V7h1v2h2v1z\"/></symbol><symbol viewBox=\"0 0 24 24\" id=\"ic_zoom_out_24px\"><path d=\"M15.5 14h-.79l-.28-.27A6.47 6.47 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14zM7 9h5v1H7z\"/></symbol></svg>";
@@ -140,8 +1948,8 @@
 
   var longerTimeoutBrowsers = ['Edge', 'Trident', 'Firefox'];
   var timeoutDuration = 0;
-  for (var i = 0; i < longerTimeoutBrowsers.length; i += 1) {
-    if (isBrowser && navigator.userAgent.indexOf(longerTimeoutBrowsers[i]) >= 0) {
+  for (var i$2 = 0; i$2 < longerTimeoutBrowsers.length; i$2 += 1) {
+    if (isBrowser && navigator.userAgent.indexOf(longerTimeoutBrowsers[i$2]) >= 0) {
       timeoutDuration = 1;
       break;
     }
@@ -494,7 +2302,7 @@
 
 
 
-  var defineProperty = function (obj, key, value) {
+  var defineProperty$1 = function (obj, key, value) {
     if (key in obj) {
       Object.defineProperty(obj, key, {
         value: value,
@@ -1573,7 +3381,7 @@
     sideValue = Math.max(Math.min(popper[len] - arrowElementSize, sideValue), 0);
 
     data.arrowElement = arrowElement;
-    data.offsets.arrow = (_data$offsets$arrow = {}, defineProperty(_data$offsets$arrow, side, Math.round(sideValue)), defineProperty(_data$offsets$arrow, altSide, ''), _data$offsets$arrow);
+    data.offsets.arrow = (_data$offsets$arrow = {}, defineProperty$1(_data$offsets$arrow, side, Math.round(sideValue)), defineProperty$1(_data$offsets$arrow, altSide, ''), _data$offsets$arrow);
 
     return data;
   }
@@ -2003,7 +3811,7 @@
         if (popper[placement] < boundaries[placement] && !options.escapeWithReference) {
           value = Math.max(popper[placement], boundaries[placement]);
         }
-        return defineProperty({}, placement, value);
+        return defineProperty$1({}, placement, value);
       },
       secondary: function secondary(placement) {
         var mainSide = placement === 'right' ? 'left' : 'top';
@@ -2011,7 +3819,7 @@
         if (popper[placement] > boundaries[placement] && !options.escapeWithReference) {
           value = Math.min(popper[mainSide], boundaries[placement] - (placement === 'right' ? popper.width : popper.height));
         }
-        return defineProperty({}, mainSide, value);
+        return defineProperty$1({}, mainSide, value);
       }
     };
 
@@ -2048,8 +3856,8 @@
       var measurement = isVertical ? 'width' : 'height';
 
       var shiftOffsets = {
-        start: defineProperty({}, side, reference[side]),
-        end: defineProperty({}, side, reference[side] + reference[measurement] - popper[measurement])
+        start: defineProperty$1({}, side, reference[side]),
+        end: defineProperty$1({}, side, reference[side] + reference[measurement] - popper[measurement])
       };
 
       data.offsets.popper = _extends({}, popper, shiftOffsets[shiftvariation]);
@@ -2916,7 +4724,7 @@
   /**
    * Convert a value to a string that is actually rendered.
    */
-  function toString (val) {
+  function toString$3 (val) {
     return val == null
       ? ''
       : Array.isArray(val) || (isPlainObject(val) && val.toString === _toString)
@@ -2976,9 +4784,9 @@
   /**
    * Check whether an object has the property.
    */
-  var hasOwnProperty = Object.prototype.hasOwnProperty;
+  var hasOwnProperty$2 = Object.prototype.hasOwnProperty;
   function hasOwn (obj, key) {
-    return hasOwnProperty.call(obj, key)
+    return hasOwnProperty$2.call(obj, key)
   }
 
   /**
@@ -3308,7 +5116,7 @@
   /**
    * Define a property.
    */
-  function def (obj, key, val, enumerable) {
+  function def$2 (obj, key, val, enumerable) {
     Object.defineProperty(obj, key, {
       value: val,
       enumerable: !!enumerable,
@@ -3690,7 +5498,7 @@
   methodsToPatch.forEach(function (method) {
     // cache original method
     var original = arrayProto[method];
-    def(arrayMethods, method, function mutator () {
+    def$2(arrayMethods, method, function mutator () {
       var args = [], len = arguments.length;
       while ( len-- ) args[ len ] = arguments[ len ];
 
@@ -3737,7 +5545,7 @@
     this.value = value;
     this.dep = new Dep();
     this.vmCount = 0;
-    def(value, '__ob__', this);
+    def$2(value, '__ob__', this);
     if (Array.isArray(value)) {
       if (hasProto) {
         protoAugment(value, arrayMethods);
@@ -3791,7 +5599,7 @@
   function copyAugment (target, src, keys) {
     for (var i = 0, l = keys.length; i < l; i++) {
       var key = keys[i];
-      def(target, key, src[key]);
+      def$2(target, key, src[key]);
     }
   }
 
@@ -5408,9 +7216,9 @@
     if (slots && Object.isExtensible(slots)) {
       (slots)._normalized = res;
     }
-    def(res, '$stable', isStable);
-    def(res, '$key', key);
-    def(res, '$hasNormal', hasNormalSlots);
+    def$2(res, '$stable', isStable);
+    def$2(res, '$key', key);
+    def$2(res, '$hasNormal', hasNormalSlots);
     return res
   }
 
@@ -5762,7 +7570,7 @@
   function installRenderHelpers (target) {
     target._o = markOnce;
     target._n = toNumber;
-    target._s = toString;
+    target._s = toString$3;
     target._l = renderList;
     target._t = renderSlot;
     target._q = looseEqual;
@@ -11283,7 +13091,7 @@
     return _typeof$1(obj);
   }
 
-  function _defineProperty$1(obj, key, value) {
+  function _defineProperty(obj, key, value) {
     if (key in obj) {
       Object.defineProperty(obj, key, {
         value: value,
@@ -11310,7 +13118,7 @@
       }
 
       ownKeys.forEach(function (key) {
-        _defineProperty$1(target, key, source[key]);
+        _defineProperty(target, key, source[key]);
       });
     }
 
@@ -13121,12 +14929,6 @@
     GlobalVue$1.use(plugin$1);
   }
 
-  var commonjsGlobal = typeof globalThis !== 'undefined' ? globalThis : typeof window !== 'undefined' ? window : typeof global !== 'undefined' ? global : typeof self !== 'undefined' ? self : {};
-
-  function createCommonjsModule(fn, module) {
-  	return module = { exports: {} }, fn(module, module.exports), module.exports;
-  }
-
   var focusVisible = createCommonjsModule(function (module, exports) {
   (function (global, factory) {
      factory() ;
@@ -13409,6 +15211,23 @@
   })));
   });
 
+  var dP$3 = _objectDp$1.f;
+  var FProto = Function.prototype;
+  var nameRE = /^\s*function ([^ (]*)/;
+  var NAME$2 = 'name';
+
+  // 19.2.4.2 name
+  NAME$2 in FProto || _descriptors$1 && dP$3(FProto, NAME$2, {
+    configurable: true,
+    get: function () {
+      try {
+        return ('' + this).match(nameRE)[1];
+      } catch (e) {
+        return '';
+      }
+    }
+  });
+
   /**
    * (Use with the CoupleParent mixin)
    * This mixin should be used on children components of a component implementing the CoupledParent mixin.
@@ -13477,6 +15296,31 @@
     };
   }
 
+  // 19.1.2.4 / 15.2.3.6 Object.defineProperty(O, P, Attributes)
+  _export(_export.S + _export.F * !_descriptors, 'Object', { defineProperty: _objectDp.f });
+
+  var $Object = _core.Object;
+  var defineProperty$2 = function defineProperty(it, key, desc) {
+    return $Object.defineProperty(it, key, desc);
+  };
+
+  var defineProperty$3 = defineProperty$2;
+
+  function _defineProperty$1(obj, key, value) {
+    if (key in obj) {
+      defineProperty$3(obj, key, {
+        value: value,
+        enumerable: true,
+        configurable: true,
+        writable: true
+      });
+    } else {
+      obj[key] = value;
+    }
+
+    return obj;
+  }
+
   /**
    * (Use with the CoupledChild mixin)
    * Mixin allowing the automatic collection of children while preserving the virtual dom children order at all times.
@@ -13498,7 +15342,7 @@
         });
         proxy.$_addCoupledChild = this.$_addCoupledChild.bind(this);
         proxy.$_removeCoupledChild = this.$_removeCoupledChild.bind(this);
-        return _defineProperty({}, name, proxy);
+        return _defineProperty$1({}, name, proxy);
       },
       props: {
         childIndex: {
@@ -13685,63 +15529,40 @@
     }
   };
 
-  //
   var script$6 = {
-    name: 'VueButton',
-    inheritAttrs: false,
-    mixins: [DisabledChild],
-    props: {
-      iconLeft: {
-        type: String,
-        default: null
-      },
-      iconRight: {
-        type: String,
-        default: null
-      },
-      label: {
-        type: String,
-        default: null
-      },
-      loading: {
-        type: Boolean,
-        default: false
-      },
-      loadingSecondary: {
-        type: Boolean,
-        default: false
-      },
-      type: {
-        type: String,
-        default: 'button'
-      },
-      tag: {
-        type: [Number, String],
-        default: null
-      }
-    },
-    computed: {
-      component: function component() {
-        if (this.$attrs.to) {
-          return 'router-link';
-        } else if (this.$attrs.href) {
-          return 'a';
-        } else {
-          return 'button';
-        }
-      },
-      ghost: function ghost() {
-        return this.finalDisabled || this.loading || this.loadingSecondary;
-      }
-    },
+    props: ["item"],
     methods: {
-      handleClick: function handleClick(event) {
-        if (this.ghost) {
-          event.preventDefault();
-          event.stopPropagation();
-          event.stopImmediatePropagation();
+      /* custom method for add/remove of favourites */
+      addToFavourite: function addToFavourite(item, i, e) {
+        e.srcElement.classList.toggle('active');
+
+        if (e.srcElement.classList.contains('active')) {
+          if (localStorage.favourites) {
+            var storedArray = JSON.parse(localStorage.getItem("favourites"));
+
+            if (e.srcElement.getAttribute('data-id')) {
+              storedArray.push(e.srcElement.getAttribute('data-id'));
+            }
+
+            localStorage.setItem("favourites", JSON.stringify(storedArray));
+          } else {
+            var storedArray = [];
+
+            if (e.srcElement.getAttribute('data-id')) {
+              storedArray.push(e.srcElement.getAttribute('data-id'));
+            }
+
+            localStorage.setItem("favourites", JSON.stringify(storedArray));
+          }
         } else {
-          this.$emit('click', event);
+          var storedArray = JSON.parse(localStorage.getItem("favourites"));
+          var index = storedArray.indexOf(e.srcElement.getAttribute('data-id'));
+
+          if (index > -1) {
+            storedArray.splice(index, 1);
+          }
+
+          localStorage.setItem("favourites", JSON.stringify(storedArray));
         }
       }
     }
@@ -13839,88 +15660,30 @@
     var _vm = this;
     var _h = _vm.$createElement;
     var _c = _vm._self._c || _h;
-    return _c(
-      _vm.component,
-      _vm._b(
+    return _c("a", { staticClass: "fa fas fa-lg fav-icon fa-star" }, [
+      _c(
+        "svg",
         {
-          tag: "component",
-          staticClass: "vue-ui-button",
-          class: [
-            _vm.component,
-            {
-              disabled: _vm.finalDisabled,
-              loading: _vm.loading,
-              ghost: _vm.ghost
-            }
-          ],
-          attrs: {
-            type: _vm.type,
-            tabindex: _vm.ghost ? -1 : 0,
-            role: "button",
-            "aria-disabled": _vm.ghost
-          },
+          staticClass: "favourite-icon",
+          staticStyle: { width: "24px", height: "24px" },
+          attrs: { "data-id": _vm.item.trackId, viewBox: "0 0 24 24" },
           on: {
-            "!click": function($event) {
-              return _vm.handleClick($event)
-            }
-          },
-          nativeOn: {
-            "!click": function($event) {
-              return _vm.handleClick($event)
+            click: function($event) {
+              return _vm.addToFavourite(_vm.index, _vm.i, $event)
             }
           }
         },
-        "component",
-        _vm.$attrs,
-        false
-      ),
-      [
-        _vm.loading ? _c("VueLoadingIndicator") : _vm._e(),
-        _vm._v(" "),
-        _c(
-          "span",
-          { staticClass: "content" },
-          [
-            _vm.loadingSecondary
-              ? _c("VueLoadingIndicator", {
-                  staticClass: "inline small loading-secondary"
-                })
-              : _vm.iconLeft
-              ? _c("VueIcon", {
-                  staticClass: "button-icon left",
-                  attrs: { icon: _vm.iconLeft }
-                })
-              : _vm._e(),
-            _vm._v(" "),
-            _c(
-              "span",
-              { staticClass: "default-slot" },
-              [
-                _vm._t("default", [
-                  _vm._v("\n        " + _vm._s(_vm.label) + "\n      ")
-                ])
-              ],
-              2
-            ),
-            _vm._v(" "),
-            _vm.tag != null
-              ? _c("div", { staticClass: "tag-wrapper" }, [
-                  _c("div", { staticClass: "tag" }, [_vm._v(_vm._s(_vm.tag))])
-                ])
-              : _vm._e(),
-            _vm._v(" "),
-            _vm.iconRight
-              ? _c("VueIcon", {
-                  staticClass: "button-icon right",
-                  attrs: { icon: _vm.iconRight }
-                })
-              : _vm._e()
-          ],
-          1
-        )
-      ],
-      1
-    )
+        [
+          _c("path", {
+            attrs: {
+              fill: "#000000",
+              d:
+                "M12.1,18.55L12,18.65L11.89,18.55C7.14,14.24 4,11.39 4,8.5C4,6.5 5.5,5 7.5,5C9.04,5 10.54,6 11.07,7.36H12.93C13.46,6 14.96,5 16.5,5C18.5,5 20,6.5 20,8.5C20,11.39 16.86,14.24 12.1,18.55M16.5,3C14.76,3 13.09,3.81 12,5.08C10.91,3.81 9.24,3 7.5,3C4.42,3 2,5.41 2,8.5C2,12.27 5.4,15.36 10.55,20.03L12,21.35L13.45,20.03C18.6,15.36 22,12.27 22,8.5C22,5.41 19.58,3 16.5,3Z"
+            }
+          })
+        ]
+      )
+    ])
   };
   var __vue_staticRenderFns__$3 = [];
   __vue_render__$3._withStripped = true;
@@ -13950,79 +15713,45 @@
       undefined
     );
 
-  /**
-   * (Use with the DisabledChild mixin)
-   * Allow disabling an entire tree of components implementing the DisabledChild mixin.
-   */
-  // @vue/component
-  var DisabledParent = {
-    provide: function provide() {
-      return {
-        VueDisableMixin: {
-          data: this.injectedDisableData
-        }
-      };
-    },
-    props: {
-      disabled: {
-        type: Boolean,
-        default: false
-      }
-    },
-    data: function data() {
-      return {
-        injectedDisableData: {
-          value: this.disabled
-        }
-      };
-    },
-    watch: {
-      disabled: function disabled(value, oldValue) {
-        if (value !== oldValue) this.injectedDisableData.value = value;
-      }
-    }
-  };
-
-  //
-  var script$7 = {
-    name: 'VueDisable',
-    mixins: [DisabledChild],
-    components: {
-      PropagateDisable: {
-        mixins: [DisabledParent],
-        render: function render(h) {
-          return h('div', {
-            staticClass: 'vue-ui-disable'
-          }, this.$slots.default);
-        }
-      }
-    },
-    props: {
-      stopPropagation: {
-        type: Boolean,
-        default: false
-      }
-    },
-    computed: {
-      propagateDisabled: function propagateDisabled() {
-        return this.stopPropagation ? this.disabled : this.finalDisabled;
-      }
-    }
-  };
+  var script$7 = {};
 
   /* script */
   const __vue_script__$7 = script$7;
-
   /* template */
   var __vue_render__$4 = function() {
     var _vm = this;
     var _h = _vm.$createElement;
     var _c = _vm._self._c || _h;
     return _c(
-      "PropagateDisable",
-      { attrs: { disabled: _vm.propagateDisabled } },
-      [_vm._t("default")],
-      2
+      "div",
+      { attrs: { id: "nav" } },
+      [
+        _c("router-link", { attrs: { to: "/" } }, [
+          _c(
+            "svg",
+            {
+              attrs: {
+                xmlns: "http://www.w3.org/2000/svg",
+                width: "16",
+                height: "44",
+                viewBox: "0 0 16 44"
+              }
+            },
+            [
+              _c("path", {
+                attrs: {
+                  d:
+                    "M8.02 16.23c-.73 0-1.86-.83-3.05-.8-1.57.02-3.01.91-3.82 2.32-1.63 2.83-.42 7.01 1.17 9.31.78 1.12 1.7 2.38 2.92 2.34 1.17-.05 1.61-.76 3.03-.76 1.41 0 1.81.76 3.05.73 1.26-.02 2.06-1.14 2.83-2.27.89-1.3 1.26-2.56 1.28-2.63-.03-.01-2.45-.94-2.48-3.74-.02-2.34 1.91-3.46 2-3.51-1.1-1.61-2.79-1.79-3.38-1.83-1.54-.12-2.83.84-3.55.84zm2.6-2.36c.65-.78 1.08-1.87.96-2.95-.93.04-2.05.62-2.72 1.4-.6.69-1.12 1.8-.98 2.86 1.03.08 2.09-.53 2.74-1.31",
+                  fill: "#fff"
+                }
+              })
+            ]
+          )
+        ]),
+        _vm._v(" "),
+        _c("div", { staticClass: "vue-ui-spacer" })
+      ],
+      1
     )
   };
   var __vue_staticRenderFns__$4 = [];
@@ -14031,7 +15760,7 @@
     /* style */
     const __vue_inject_styles__$7 = undefined;
     /* scoped */
-    const __vue_scope_id__$7 = undefined;
+    const __vue_scope_id__$7 = "data-v-3546a566";
     /* module identifier */
     const __vue_module_identifier__$7 = undefined;
     /* functional template */
@@ -14053,97 +15782,8 @@
       undefined
     );
 
-  //
   var script$8 = {
-    name: 'VueDropdown',
-    inheritAttrs: false,
-    mixins: [DisabledChild],
-    props: {
-      autoHide: {
-        type: Boolean,
-        default: true
-      },
-      buttonClass: {
-        type: [String, Array, Object],
-        default: null
-      },
-      contentClass: {
-        type: [String, Array, Object],
-        default: null
-      },
-      forceMinSize: {
-        type: Boolean,
-        default: false
-      },
-      iconLeft: {
-        type: String,
-        default: null
-      },
-      iconRight: {
-        type: String,
-        default: null
-      },
-      label: {
-        type: [String, Number],
-        default: null
-      },
-      offset: {
-        default: 4
-      },
-      noPopoverFocus: {
-        type: Boolean,
-        default: false
-      },
-      popoverClass: {
-        type: [String, Array, Object],
-        default: undefined
-      }
-    },
-    data: function data() {
-      return {
-        isOpen: false,
-        width: 0
-      };
-    },
-    mounted: function mounted() {
-      if (this.forceMinSize) {
-        this.$nextTick(this.onResize);
-      }
-    },
-    beforeDestroy: function beforeDestroy() {
-      this.removeGlobalMouseEvents();
-    },
-    methods: {
-      onKeyTab: function onKeyTab(event) {
-        // Focus the first focusable element in the popover instead of cycling through the whole app
-        // (popover content will be appened at the end of the body)
-        if (this.isOpen && !this.noPopoverFocus) {
-          var el = this.$refs.popoverContent.querySelector('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"]');
-
-          if (el) {
-            event.preventDefault();
-            el.focus();
-          }
-        }
-      },
-      onPopoverContentMousedown: function onPopoverContentMousedown(event) {
-        this.$emit('popover-mousedown', event);
-        window.addEventListener('mouseup', this.onPopoverContentMouseup);
-      },
-      onPopoverContentMouseup: function onPopoverContentMouseup(event) {
-        this.$emit('popover-mouseup', event);
-        this.removeGlobalMouseEvents();
-      },
-      onResize: function onResize() {
-        this.width = this.$el.offsetWidth;
-      },
-      onUpdateOpen: function onUpdateOpen(value) {
-        this.isOpen = value;
-      },
-      removeGlobalMouseEvents: function removeGlobalMouseEvents() {
-        window.removeEventListener('mouseup', this.onPopoverContentMouseup);
-      }
-    }
+    props: ['value']
   };
 
   /* script */
@@ -14153,101 +15793,55 @@
     var _vm = this;
     var _h = _vm.$createElement;
     var _c = _vm._self._c || _h;
-    return _c(
-      "VDropdown",
-      _vm._g(
-        _vm._b(
-          {
-            ref: "popover",
-            staticClass: "vue-ui-dropdown",
-            attrs: {
-              "popover-class": _vm.popoverClass,
-              "auto-hide": _vm.autoHide,
-              offset: _vm.offset,
-              disabled: _vm.finalDisabled
-            },
-            on: { "update:open": _vm.onUpdateOpen },
-            nativeOn: {
-              keydown: function($event) {
-                if (
-                  !$event.type.indexOf("key") &&
-                  _vm._k($event.keyCode, "tab", 9, $event.key, "Tab")
-                ) {
-                  return null
-                }
-                return _vm.onKeyTab($event)
-              }
-            },
-            scopedSlots: _vm._u(
-              [
-                {
-                  key: "popper",
-                  fn: function() {
-                    return [
-                      _c(
-                        "VueDisable",
-                        {
-                          ref: "popoverContent",
-                          staticClass: "vue-ui-dropdown-content",
-                          class: _vm.contentClass,
-                          style: {
-                            minWidth: _vm.forceMinSize ? _vm.width + "px" : "0"
-                          },
-                          attrs: { disabled: !_vm.isOpen },
-                          nativeOn: {
-                            mousedown: function($event) {
-                              return _vm.onPopoverContentMousedown($event)
-                            }
-                          }
-                        },
-                        [_vm._t("default")],
-                        2
-                      )
-                    ]
-                  },
-                  proxy: true
-                }
-              ],
-              null,
-              true
-            )
-          },
-          "VDropdown",
-          _vm.$attrs,
-          false
-        ),
-        _vm.$listeners
-      ),
-      [
+    return _c("div", { staticClass: "input-group" }, [
+      _c("input", {
+        staticClass: "form-control",
+        attrs: {
+          id: "search",
+          type: "text",
+          placeholder: "Search iTunes",
+          name: "search",
+          autocomplete: "search"
+        },
+        domProps: { value: _vm.value },
+        on: {
+          input: function($event) {
+            return _vm.$emit("input", $event.target.value)
+          }
+        }
+      }),
+      _vm._v(" "),
+      _c("div", { staticClass: "input-group-append" }, [
         _c(
-          "div",
-          { staticClass: "dropdown-trigger" },
+          "button",
+          { staticClass: "btn btn-secondary", attrs: { type: "submit" } },
           [
-            _vm._t("trigger", [
+            _c("i", { staticClass: "fa fa-search" }, [
               _c(
-                "VueButton",
+                "svg",
                 {
-                  class: _vm.buttonClass,
                   attrs: {
-                    "icon-left": _vm.iconLeft,
-                    "icon-right": _vm.iconRight,
-                    disabled: _vm.finalDisabled
+                    xmlns: "http://www.w3.org/2000/svg",
+                    width: "24",
+                    height: "24",
+                    viewBox: "0 0 24 24"
                   }
                 },
-                [_vm._v(_vm._s(_vm.label))]
+                [
+                  _c("path", { attrs: { fill: "none", d: "M0 0h24v24H0V0z" } }),
+                  _c("path", {
+                    attrs: {
+                      d:
+                        "M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"
+                    }
+                  })
+                ]
               )
             ])
-          ],
-          2
-        ),
-        _vm._v(" "),
-        _vm._v(" "),
-        _vm.forceMinSize
-          ? _c("resize-observer", { on: { notify: _vm.onResize } })
-          : _vm._e()
-      ],
-      1
-    )
+          ]
+        )
+      ])
+    ])
   };
   var __vue_staticRenderFns__$5 = [];
   __vue_render__$5._withStripped = true;
@@ -14277,26 +15871,11 @@
       undefined
     );
 
-  //
-  //
-  //
-  //
-  //
-  //
-  //
-  //
-  //
-  //
-  //
   var script$9 = {
-    name: 'VueDropdownButton',
-    inheritAttrs: false,
-    props: {
-      keepOpen: {
-        type: Boolean,
-        default: false
-      }
-    }
+    components: {
+      'favourite': $0_0
+    },
+    props: ["item"]
   };
 
   /* script */
@@ -14306,30 +15885,29 @@
     var _vm = this;
     var _h = _vm.$createElement;
     var _c = _vm._self._c || _h;
-    return _c(
-      "VueButton",
-      _vm._g(
-        _vm._b(
-          {
-            directives: [
-              {
-                name: "close-popper",
-                rawName: "v-close-popper",
-                value: !_vm.keepOpen,
-                expression: "!keepOpen"
-              }
-            ],
-            staticClass: "vue-ui-dropdown-button"
-          },
-          "VueButton",
-          _vm.$attrs,
-          false
+    return _c("div", { staticClass: "card" }, [
+      _c("img", {
+        staticClass: "card-img-top",
+        attrs: { src: _vm.item.artwork, alt: _vm.item.name }
+      }),
+      _vm._v(" "),
+      _c("div", { staticClass: "card-body" }, [
+        _c(
+          "h5",
+          { staticClass: "card-title" },
+          [
+            _c("span", { staticClass: "title" }, [_vm._v(_vm._s(_vm.item.name))]),
+            _vm._v(" "),
+            _c("favourite", { attrs: { item: _vm.item } })
+          ],
+          1
         ),
-        _vm.$listeners
-      ),
-      [_vm._t("default")],
-      2
-    )
+        _vm._v(" "),
+        _c("p", { staticClass: "card-text" }, [_vm._v(_vm._s(_vm.item.genre))]),
+        _vm._v(" "),
+        _c("a", { attrs: { href: _vm.item.url } }, [_vm._v("Download on iTunes")])
+      ])
+    ])
   };
   var __vue_staticRenderFns__$6 = [];
   __vue_render__$6._withStripped = true;
@@ -14337,7 +15915,7 @@
     /* style */
     const __vue_inject_styles__$9 = undefined;
     /* scoped */
-    const __vue_scope_id__$9 = undefined;
+    const __vue_scope_id__$9 = "data-v-150fffdb";
     /* module identifier */
     const __vue_module_identifier__$9 = undefined;
     /* functional template */
@@ -14359,2165 +15937,13 @@
       undefined
     );
 
-  //
-  //
-  //
-  //
-  //
-  //
-  //
-  //
-  //
-  //
-  //
-  //
-  //
-  //
-  //
-  //
-  //
-  //
-  //
-  //
-  //
-  //
-  //
-  //
-  //
-  //
-  //
-  //
-  //
-  //
-  //
-  //
-  //
-  //
-  //
-  var statusIcons = {
-    danger: 'error',
-    warning: 'warning',
-    info: 'info',
-    success: 'check_circle'
-  };
-  var script$a = {
-    name: 'VueFormField',
-    provide: function provide() {
-      return {
-        VueFormField: {
-          data: this.injectedData
-        }
-      };
-    },
-    props: {
-      subtitle: {
-        type: String,
-        default: undefined
-      },
-      subtitleIcon: {
-        type: String,
-        default: undefined
-      },
-      statusIcon: {
-        type: Boolean,
-        default: false
-      },
-      title: {
-        type: String,
-        default: undefined
-      }
-    },
-    data: function data() {
-      return {
-        injectedData: {
-          focused: false,
-          status: null
-        }
-      };
-    },
-    computed: {
-      subtitleIconId: function subtitleIconId() {
-        if (this.subtitleIcon) {
-          return this.subtitleIcon;
-        }
-
-        if (this.statusIcon) {
-          var status = this.injectedData.status;
-
-          if (status) {
-            return statusIcons[status];
-          }
-        }
-      }
-    }
-  };
-
-  /* script */
-  const __vue_script__$a = script$a;
-  /* template */
-  var __vue_render__$7 = function() {
-    var _obj, _obj$1;
-    var _vm = this;
-    var _h = _vm.$createElement;
-    var _c = _vm._self._c || _h;
-    return _c(
-      "div",
-      {
-        staticClass: "vue-ui-form-field",
-        class: ((_obj = {
-          focused: _vm.injectedData.focused
-        }),
-        (_obj["status-" + _vm.injectedData.status] = _vm.injectedData.status),
-        _obj)
-      },
-      [
-        _c("div", { staticClass: "wrapper" }, [
-          _c(
-            "div",
-            { staticClass: "title" },
-            [
-              _vm._t("title", [
-                _c("span", { domProps: { innerHTML: _vm._s(_vm.title) } })
-              ])
-            ],
-            2
-          ),
-          _vm._v(" "),
-          _c("div", { staticClass: "content" }, [_vm._t("default")], 2),
-          _vm._v(" "),
-          _c(
-            "div",
-            {
-              staticClass: "subtitle",
-              class: ((_obj$1 = {}),
-              (_obj$1["vue-ui-text " + _vm.injectedData.status] =
-                _vm.injectedData.status),
-              _obj$1)
-            },
-            [
-              _vm.subtitleIconId
-                ? _c("VueIcon", { attrs: { icon: _vm.subtitleIconId } })
-                : _vm._e(),
-              _vm._v(" "),
-              _vm._t("subtitle", [
-                _c("span", { domProps: { innerHTML: _vm._s(_vm.subtitle) } })
-              ])
-            ],
-            2
-          )
-        ])
-      ]
-    )
-  };
-  var __vue_staticRenderFns__$7 = [];
-  __vue_render__$7._withStripped = true;
-
-    /* style */
-    const __vue_inject_styles__$a = undefined;
-    /* scoped */
-    const __vue_scope_id__$a = undefined;
-    /* module identifier */
-    const __vue_module_identifier__$a = undefined;
-    /* functional template */
-    const __vue_is_functional_template__$a = false;
-    /* style inject */
-    
-    /* style inject SSR */
-    
-
-    
-    var $0_4 = normalizeComponent_1$1(
-      { render: __vue_render__$7, staticRenderFns: __vue_staticRenderFns__$7 },
-      __vue_inject_styles__$a,
-      __vue_script__$a,
-      __vue_scope_id__$a,
-      __vue_is_functional_template__$a,
-      __vue_module_identifier__$a,
-      undefined,
-      undefined
-    );
-
-  //
-  //
-  //
-  //
-  //
-  //
-  //
-  //
-  //
-  //
-  //
-  //
-  //
-  //
-  //
-  //
-  //
-  //
-  //
-  //
-  //
-  //
-  //
-  //
-  //
-  //
-  //
-  //
-  //
-  //
-  //
-  var script$b = {
-    name: 'VueGroup',
-    model: {
-      event: 'update'
-    },
-    provide: function provide() {
-      return {
-        VueGroup: {
-          data: this.injection,
-          setValue: this.setValue
-        }
-      };
-    },
-    props: {
-      value: {},
-      indicator: {
-        type: Boolean,
-        default: false
-      }
-    },
-    data: function data() {
-      return {
-        injection: {
-          value: this.value
-        },
-        indicatorStyle: null
-      };
-    },
-    watch: {
-      value: function value(_value, oldValue) {
-        if (_value !== oldValue) {
-          this.injection.value = _value;
-          this.updateIndicator();
-        }
-      }
-    },
-    mounted: function mounted() {
-      this.updateIndicator();
-    },
-    methods: {
-      setValue: function setValue(value) {
-        this.$emit('update', value);
-      },
-      updateIndicator: function updateIndicator() {
-        var _this = this;
-
-        this.$nextTick(function () {
-          var el = _this.$el.querySelector('.selected');
-
-          if (el) {
-            var offset = {
-              top: el.offsetTop,
-              left: el.offsetLeft,
-              width: el.offsetWidth,
-              height: el.offsetHeight
-            };
-            var parent = el.offsetParent;
-
-            while (parent && parent !== _this.$el) {
-              offset.top += parent.offsetTop;
-              offset.left += parent.offsetLeft;
-              parent = parent.offsetParent;
-            }
-
-            _this.indicatorStyle = offset;
-          } else {
-            _this.indicatorStyle = null;
-          }
-        });
-      }
-    }
-  };
-
-  /* script */
-  const __vue_script__$b = script$b;
-  /* template */
-  var __vue_render__$8 = function() {
-    var _vm = this;
-    var _h = _vm.$createElement;
-    var _c = _vm._self._c || _h;
-    return _c(
-      "div",
-      {
-        staticClass: "vue-ui-group",
-        class: {
-          "has-indicator": _vm.indicator
-        }
-      },
-      [
-        _c(
-          "div",
-          { staticClass: "content-wrapper" },
-          [
-            _c("div", { staticClass: "content" }, [_vm._t("default")], 2),
-            _vm._v(" "),
-            _vm.indicator
-              ? _c("resize-observer", {
-                  on: {
-                    notify: function($event) {
-                      return _vm.updateIndicator()
-                    }
-                  }
-                })
-              : _vm._e()
-          ],
-          1
-        ),
-        _vm._v(" "),
-        _vm.indicator && _vm.indicatorStyle
-          ? _c(
-              "div",
-              {
-                staticClass: "indicator",
-                style: {
-                  top: _vm.indicatorStyle.top + "px",
-                  left: _vm.indicatorStyle.left + "px",
-                  width: _vm.indicatorStyle.width + "px",
-                  height: _vm.indicatorStyle.height + "px"
-                }
-              },
-              [_c("div", { staticClass: "content" }, [_vm._t("indicator")], 2)]
-            )
-          : _vm._e()
-      ]
-    )
-  };
-  var __vue_staticRenderFns__$8 = [];
-  __vue_render__$8._withStripped = true;
-
-    /* style */
-    const __vue_inject_styles__$b = undefined;
-    /* scoped */
-    const __vue_scope_id__$b = undefined;
-    /* module identifier */
-    const __vue_module_identifier__$b = undefined;
-    /* functional template */
-    const __vue_is_functional_template__$b = false;
-    /* style inject */
-    
-    /* style inject SSR */
-    
-
-    
-    var $0_5 = normalizeComponent_1$1(
-      { render: __vue_render__$8, staticRenderFns: __vue_staticRenderFns__$8 },
-      __vue_inject_styles__$b,
-      __vue_script__$b,
-      __vue_scope_id__$b,
-      __vue_is_functional_template__$b,
-      __vue_module_identifier__$b,
-      undefined,
-      undefined
-    );
-
-  //
-  //
-  //
-  //
-  //
-  //
-  //
-  //
-  //
-  //
-  //
-  //
-  //
-  //
-  //
-  var script$c = {
-    name: 'VueGroupButton',
-    inheritAttrs: false,
-    inject: ['VueGroup'],
-    props: {
-      value: {},
-      flat: {
-        type: Boolean,
-        default: false
-      }
-    },
-    computed: {
-      selected: function selected() {
-        return this.value === this.VueGroup.data.value;
-      }
-    },
-    watch: {
-      selected: function selected(value, oldValue) {
-        if (value !== oldValue) {
-          this.$emit('selected', value);
-        }
-      }
-    },
-    methods: {
-      handleClick: function handleClick() {
-        for (var _len = arguments.length, args = new Array(_len), _key = 0; _key < _len; _key++) {
-          args[_key] = arguments[_key];
-        }
-
-        this.$emit.apply(this, ['click'].concat(args));
-        this.VueGroup.setValue(this.value);
-      }
-    }
-  };
-
-  /* script */
-  const __vue_script__$c = script$c;
-  /* template */
-  var __vue_render__$9 = function() {
-    var _vm = this;
-    var _h = _vm.$createElement;
-    var _c = _vm._self._c || _h;
-    return _c(
-      "VueButton",
-      _vm._b(
-        {
-          staticClass: "vue-ui-group-button",
-          class: {
-            selected: _vm.selected,
-            flat: _vm.flat && !_vm.selected
-          },
-          attrs: { "aria-selected": _vm.selected },
-          on: { click: _vm.handleClick }
-        },
-        "VueButton",
-        _vm.$attrs,
-        false
-      ),
-      [_vm._t("default")],
-      2
-    )
-  };
-  var __vue_staticRenderFns__$9 = [];
-  __vue_render__$9._withStripped = true;
-
-    /* style */
-    const __vue_inject_styles__$c = undefined;
-    /* scoped */
-    const __vue_scope_id__$c = undefined;
-    /* module identifier */
-    const __vue_module_identifier__$c = undefined;
-    /* functional template */
-    const __vue_is_functional_template__$c = false;
-    /* style inject */
-    
-    /* style inject SSR */
-    
-
-    
-    var $0_6 = normalizeComponent_1$1(
-      { render: __vue_render__$9, staticRenderFns: __vue_staticRenderFns__$9 },
-      __vue_inject_styles__$c,
-      __vue_script__$c,
-      __vue_scope_id__$c,
-      __vue_is_functional_template__$c,
-      __vue_module_identifier__$c,
-      undefined,
-      undefined
-    );
-
-  function _extends$1(){return _extends$1=Object.assign||function(a){for(var b,c=1;c<arguments.length;c++)for(var d in b=arguments[c],b)Object.prototype.hasOwnProperty.call(b,d)&&(a[d]=b[d]);return a},_extends$1.apply(this,arguments)}var normalMerge=["attrs","props","domProps"],toArrayMerge=["class","style","directives"],functionalMerge=["on","nativeOn"],mergeJsxProps=function(a){return a.reduce(function(c,a){for(var b in a)if(!c[b])c[b]=a[b];else if(-1!==normalMerge.indexOf(b))c[b]=_extends$1({},c[b],a[b]);else if(-1!==toArrayMerge.indexOf(b)){var d=c[b]instanceof Array?c[b]:[c[b]],e=a[b]instanceof Array?a[b]:[a[b]];c[b]=d.concat(e);}else if(-1!==functionalMerge.indexOf(b)){for(var f in a[b])if(c[b][f]){var g=c[b][f]instanceof Array?c[b][f]:[c[b][f]],h=a[b][f]instanceof Array?a[b][f]:[a[b][f]];c[b][f]=g.concat(h);}else c[b][f]=a[b][f];}else if("hook"==b)for(var i in a[b])c[b][i]=c[b][i]?mergeFn(c[b][i],a[b][i]):a[b][i];else c[b]=a[b];return c},{})},mergeFn=function(a,b){return function(){a&&a.apply(this,arguments),b&&b.apply(this,arguments);}};var helper=mergeJsxProps;
-
-  var script$d = {
-    name: 'VueIcon',
-    functional: true,
-    props: {
-      icon: {
-        type: String,
-        required: true
-      }
-    },
-    render: function render(h, _ref) {
-      var props = _ref.props,
-          data = _ref.data;
-      return h("div", helper([{
-        "class": "vue-ui-icon"
-      }, data]), [h("svg", [h("use", {
-        "attrs": {
-          "xlink:href": "#ic_".concat(props.icon, "_24px")
-        }
-      })])]);
-    }
-  };
-
-  /* script */
-  const __vue_script__$d = script$d;
-  /* template */
-
-    /* style */
-    const __vue_inject_styles__$d = undefined;
-    /* scoped */
-    const __vue_scope_id__$d = undefined;
-    /* module identifier */
-    const __vue_module_identifier__$d = undefined;
-    /* functional template */
-    const __vue_is_functional_template__$d = undefined;
-    /* style inject */
-    
-    /* style inject SSR */
-    
-
-    
-    var $0_7 = normalizeComponent_1$1(
-      {},
-      __vue_inject_styles__$d,
-      __vue_script__$d,
-      __vue_scope_id__$d,
-      __vue_is_functional_template__$d,
-      __vue_module_identifier__$d,
-      undefined,
-      undefined
-    );
-
-  //
-  var script$e = {
-    name: 'VueInput',
-    inheritAttrs: false,
-    mixins: [DisabledChild],
-    inject: {
-      VueFormField: {
-        default: null
-      }
-    },
-    model: {
-      event: 'update'
-    },
-    props: {
-      iconLeft: {
-        type: String,
-        default: null
-      },
-      iconRight: {
-        type: String,
-        default: null
-      },
-      loadingLeft: {
-        type: Boolean,
-        default: false
-      },
-      loadingRight: {
-        type: Boolean,
-        default: false
-      },
-      placeholder: {
-        type: String,
-        default: undefined
-      },
-      selectAll: {
-        type: Boolean,
-        default: false
-      },
-      status: {
-        type: String,
-        default: undefined
-      },
-      suggestion: {
-        type: [String, Number],
-        default: null
-      },
-      type: {
-        type: String,
-        default: 'text'
-      },
-      value: {}
-    },
-    data: function data() {
-      return {
-        focused: false
-      };
-    },
-    computed: {
-      showSuggestion: function showSuggestion() {
-        return this.suggestion !== null && this.suggestion !== this.value && this.focused && this.value;
-      },
-      valueModel: {
-        get: function get() {
-          return this.value;
-        },
-        set: function set(value) {
-          this.$emit('update', value);
-        }
-      }
-    },
-    watch: {
-      focused: {
-        handler: function handler(value) {
-          if (this.VueFormField) {
-            this.VueFormField.data.focused = value;
-          }
-        },
-        immediate: true
-      },
-      status: {
-        handler: function handler(value) {
-          if (this.VueFormField) {
-            this.VueFormField.data.status = value;
-          }
-        },
-        immediate: true
-      }
-    },
-    methods: {
-      focus: function focus() {
-        var input = this.$refs.input;
-        input.focus();
-
-        if (this.selectAll) {
-          input.setSelectionRange(0, input.value.length);
-        }
-      },
-      onBlur: function onBlur(event) {
-        this.focused = false;
-        this.$emit('blur', event);
-      },
-      onFocus: function onFocus(event) {
-        this.focused = true;
-        this.$emit('focus', event);
-      },
-      onKeyTab: function onKeyTab(event) {
-        if (this.showSuggestion) {
-          this.valueModel = this.suggestion;
-          event.preventDefault();
-          event.stopPropagation();
-        }
-      }
-    }
-  };
-
-  /* script */
-  const __vue_script__$e = script$e;
-  /* template */
-  var __vue_render__$a = function() {
-    var _obj;
-    var _vm = this;
-    var _h = _vm.$createElement;
-    var _c = _vm._self._c || _h;
-    return _c(
-      "div",
-      {
-        staticClass: "vue-ui-input",
-        class: [
-          "type-" + _vm.type,
-          ((_obj = {
-            disabled: _vm.finalDisabled,
-            focused: _vm.focused,
-            "show-suggestion": _vm.showSuggestion
-          }),
-          (_obj["status-" + _vm.status] = _vm.status),
-          _obj)
-        ],
-        on: {
-          click: function($event) {
-            return _vm.focus()
-          }
-        }
-      },
-      [
-        _c(
-          "div",
-          { staticClass: "content" },
-          [
-            _vm.loadingLeft
-              ? _c("VueLoadingIndicator", { staticClass: "small left" })
-              : _vm.iconLeft
-              ? _c("VueIcon", {
-                  staticClass: "input-icon left",
-                  attrs: { icon: _vm.iconLeft }
-                })
-              : _vm._e(),
-            _vm._v(" "),
-            _vm._t("left"),
-            _vm._v(" "),
-            _c(
-              "div",
-              { staticClass: "input-wrapper" },
-              [
-                _c(
-                  _vm.type === "textarea" ? _vm.type : "input",
-                  _vm._g(
-                    _vm._b(
-                      {
-                        ref: "input",
-                        tag: "component",
-                        staticClass: "input",
-                        attrs: {
-                          type: _vm.type,
-                          placeholder: _vm.placeholder,
-                          disabled: _vm.finalDisabled
-                        },
-                        domProps: { value: _vm.valueModel },
-                        on: {
-                          input: function($event) {
-                            _vm.valueModel = $event.currentTarget.value;
-                          },
-                          focus: _vm.onFocus,
-                          blur: _vm.onBlur,
-                          keydown: function($event) {
-                            if (
-                              !$event.type.indexOf("key") &&
-                              _vm._k($event.keyCode, "tab", 9, $event.key, "Tab")
-                            ) {
-                              return null
-                            }
-                            return _vm.onKeyTab($event)
-                          }
-                        }
-                      },
-                      "component",
-                      _vm.$attrs,
-                      false
-                    ),
-                    _vm.$listeners
-                  )
-                ),
-                _vm._v(" "),
-                _vm.showSuggestion
-                  ? _c("input", {
-                      staticClass: "input suggestion",
-                      attrs: { disabled: "" },
-                      domProps: { value: _vm.suggestion }
-                    })
-                  : _vm._e()
-              ],
-              1
-            ),
-            _vm._v(" "),
-            _vm._t("right"),
-            _vm._v(" "),
-            _vm.iconRight
-              ? _c("VueIcon", {
-                  staticClass: "input-icon right",
-                  attrs: { icon: _vm.iconRight }
-                })
-              : _vm._e(),
-            _vm._v(" "),
-            _vm.loadingRight
-              ? _c("VueLoadingIndicator", { staticClass: "small right" })
-              : _vm._e(),
-            _vm._v(" "),
-            _c("div", { staticClass: "border" })
-          ],
-          2
-        )
-      ]
-    )
-  };
-  var __vue_staticRenderFns__$a = [];
-  __vue_render__$a._withStripped = true;
-
-    /* style */
-    const __vue_inject_styles__$e = undefined;
-    /* scoped */
-    const __vue_scope_id__$e = undefined;
-    /* module identifier */
-    const __vue_module_identifier__$e = undefined;
-    /* functional template */
-    const __vue_is_functional_template__$e = false;
-    /* style inject */
-    
-    /* style inject SSR */
-    
-
-    
-    var $0_8 = normalizeComponent_1$1(
-      { render: __vue_render__$a, staticRenderFns: __vue_staticRenderFns__$a },
-      __vue_inject_styles__$e,
-      __vue_script__$e,
-      __vue_scope_id__$e,
-      __vue_is_functional_template__$e,
-      __vue_module_identifier__$e,
-      undefined,
-      undefined
-    );
-
-  var script$f = {
-    name: 'VueLoadingBar',
-    functional: true,
-    props: {
-      value: {
-        type: Number,
-        default: 0
-      },
-      unknown: {
-        type: Boolean,
-        default: false
-      }
-    },
-    render: function render(h, _ref) {
-      var props = _ref.props,
-          data = _ref.data;
-      data.class = [data.class, {
-        unknown: props.unknown
-      }];
-      return h("div", helper([{
-        "class": "vue-ui-loading-bar"
-      }, data]), [h("div", {
-        "class": "bar",
-        "style": !props.unknown && {
-          width: "".concat(props.value * 100, "%")
-        }
-      })]);
-    }
-  };
-
-  /* script */
-  const __vue_script__$f = script$f;
-  /* template */
-
-    /* style */
-    const __vue_inject_styles__$f = undefined;
-    /* scoped */
-    const __vue_scope_id__$f = undefined;
-    /* module identifier */
-    const __vue_module_identifier__$f = undefined;
-    /* functional template */
-    const __vue_is_functional_template__$f = undefined;
-    /* style inject */
-    
-    /* style inject SSR */
-    
-
-    
-    var $0_9 = normalizeComponent_1$1(
-      {},
-      __vue_inject_styles__$f,
-      __vue_script__$f,
-      __vue_scope_id__$f,
-      __vue_is_functional_template__$f,
-      __vue_module_identifier__$f,
-      undefined,
-      undefined
-    );
-
-  var script$g = {
-    name: 'VueLoadingIndicator',
-    functional: true,
-    render: function render(h, _ref) {
-      var data = _ref.data,
-          children = _ref.children;
-      return h("div", helper([{
-        "class": "vue-ui-loading-indicator"
-      }, data]), [h("div", {
-        "class": "animation"
-      }), children]);
-    }
-  };
-
-  /* script */
-  const __vue_script__$g = script$g;
-  /* template */
-
-    /* style */
-    const __vue_inject_styles__$g = undefined;
-    /* scoped */
-    const __vue_scope_id__$g = undefined;
-    /* module identifier */
-    const __vue_module_identifier__$g = undefined;
-    /* functional template */
-    const __vue_is_functional_template__$g = undefined;
-    /* style inject */
-    
-    /* style inject SSR */
-    
-
-    
-    var $0_10 = normalizeComponent_1$1(
-      {},
-      __vue_inject_styles__$g,
-      __vue_script__$g,
-      __vue_scope_id__$g,
-      __vue_is_functional_template__$g,
-      __vue_module_identifier__$g,
-      undefined,
-      undefined
-    );
-
-  //
-  var script$h = {
-    name: 'VueModal',
-    mixins: [DisableScroll],
-    props: {
-      locked: {
-        type: Boolean,
-        default: false
-      },
-      title: {
-        type: String,
-        default: null
-      }
-    },
-    mounted: function mounted() {
-      var _this = this;
-
-      this.$nextTick(function () {
-        _this.$el.focus();
-      });
-    },
-    methods: {
-      close: function close() {
-        if (!this.locked) {
-          this.$emit('close');
-        }
-      }
-    }
-  };
-
-  /* script */
-  const __vue_script__$h = script$h;
-  /* template */
-  var __vue_render__$b = function() {
-    var _vm = this;
-    var _h = _vm.$createElement;
-    var _c = _vm._self._c || _h;
-    return _c(
-      "transition",
-      {
-        attrs: {
-          name: "vue-ui-modal",
-          duration: {
-            enter: 1000,
-            leave: 300
-          },
-          appear: ""
-        }
-      },
-      [
-        _c(
-          "div",
-          {
-            staticClass: "vue-ui-modal",
-            class: {
-              locked: _vm.locked
-            },
-            attrs: { tabindex: "0", role: "dialog", "aria-modal": "true" },
-            on: {
-              keyup: function($event) {
-                if (
-                  !$event.type.indexOf("key") &&
-                  _vm._k($event.keyCode, "esc", 27, $event.key, ["Esc", "Escape"])
-                ) {
-                  return null
-                }
-                return _vm.close()
-              }
-            }
-          },
-          [
-            _c("div", {
-              staticClass: "backdrop",
-              on: {
-                click: function($event) {
-                  return _vm.close()
-                }
-              }
-            }),
-            _vm._v(" "),
-            _c(
-              "div",
-              {
-                staticClass: "shell",
-                on: {
-                  keyup: function($event) {
-                    if (
-                      !$event.type.indexOf("key") &&
-                      _vm._k($event.keyCode, "esc", 27, $event.key, [
-                        "Esc",
-                        "Escape"
-                      ])
-                    ) {
-                      return null
-                    }
-                    return _vm.close()
-                  }
-                }
-              },
-              [
-                _c(
-                  "div",
-                  { staticClass: "header" },
-                  [
-                    _vm._t("header", [
-                      _vm.title
-                        ? _c("div", {
-                            staticClass: "title",
-                            domProps: { innerHTML: _vm._s(_vm.title) }
-                          })
-                        : _vm._e()
-                    ])
-                  ],
-                  2
-                ),
-                _vm._v(" "),
-                _c("div", { staticClass: "body" }, [_vm._t("default")], 2),
-                _vm._v(" "),
-                _c("div", { staticClass: "footer" }, [_vm._t("footer")], 2),
-                _vm._v(" "),
-                !_vm.locked
-                  ? _c("VueButton", {
-                      staticClass: "close-button icon-button flat round",
-                      attrs: { "icon-left": "close" },
-                      on: {
-                        click: function($event) {
-                          return _vm.close()
-                        }
-                      }
-                    })
-                  : _vm._e()
-              ],
-              1
-            )
-          ]
-        )
-      ]
-    )
-  };
-  var __vue_staticRenderFns__$b = [];
-  __vue_render__$b._withStripped = true;
-
-    /* style */
-    const __vue_inject_styles__$h = undefined;
-    /* scoped */
-    const __vue_scope_id__$h = undefined;
-    /* module identifier */
-    const __vue_module_identifier__$h = undefined;
-    /* functional template */
-    const __vue_is_functional_template__$h = false;
-    /* style inject */
-    
-    /* style inject SSR */
-    
-
-    
-    var $0_11 = normalizeComponent_1$1(
-      { render: __vue_render__$b, staticRenderFns: __vue_staticRenderFns__$b },
-      __vue_inject_styles__$h,
-      __vue_script__$h,
-      __vue_scope_id__$h,
-      __vue_is_functional_template__$h,
-      __vue_module_identifier__$h,
-      undefined,
-      undefined
-    );
-
-  //
-  var script$i = {
-    name: 'VueSelect',
-    inheritAttrs: false,
-    model: {
-      event: 'update'
-    },
-    mixins: [DisabledChild],
-    provide: function provide() {
-      return {
-        VueSelect: {
-          setCurrentChild: this.setCurrentChild
-        }
-      };
-    },
-    props: {
-      iconLeft: {
-        type: String,
-        default: null
-      },
-      iconRight: {
-        type: String,
-        default: 'keyboard_arrow_down'
-      },
-      label: {
-        type: [String, Number],
-        default: null
-      },
-      placeholder: {
-        type: String,
-        default: 'Select...'
-      },
-      popoverClass: {
-        type: String,
-        default: undefined
-      },
-      value: {}
-    },
-    data: function data() {
-      return {
-        currentChild: null
-      };
-    },
-    computed: {
-      displayedLabel: function displayedLabel() {
-        if (this.label) {
-          return this.label;
-        } else if (this.currentChild) {
-          return this.currentChild.selectLabel || this.currentChild.$attrs.label || this.value;
-        } else if (this.placeholder) {
-          return this.placeholder;
-        } else {
-          return this.value;
-        }
-      },
-      displayedIcon: function displayedIcon() {
-        if (this.iconLeft) {
-          return this.iconLeft;
-        } else if (this.currentChild) {
-          return this.currentChild.$attrs.icon || this.currentChild.$attrs['icon-left'];
-        }
-      },
-      valueModel: {
-        get: function get() {
-          return this.value;
-        },
-        set: function set(value) {
-          this.$emit('update', value);
-        }
-      }
-    },
-    methods: {
-      setCurrentChild: function setCurrentChild(vm) {
-        this.currentChild = vm;
-      }
-    }
-  };
-
-  /* script */
-  const __vue_script__$i = script$i;
-  /* template */
-  var __vue_render__$c = function() {
-    var _vm = this;
-    var _h = _vm.$createElement;
-    var _c = _vm._self._c || _h;
-    return _c(
-      "VueDropdown",
-      _vm._g(
-        _vm._b(
-          {
-            ref: "dropdown",
-            staticClass: "vue-ui-select",
-            attrs: {
-              disabled: _vm.finalDisabled,
-              "icon-left": _vm.displayedIcon,
-              "icon-right": _vm.iconRight,
-              label: _vm.displayedLabel,
-              "popover-class": ["popover", "select-popover", _vm.popoverClass],
-              "content-class": "vue-ui-select-popover-content",
-              "force-min-size": ""
-            }
-          },
-          "VueDropdown",
-          _vm.$attrs,
-          false
-        ),
-        _vm.$listeners
-      ),
-      [
-        _c(
-          "template",
-          { slot: "trigger" },
-          [_vm._t("trigger", null, { label: _vm.displayedLabel })],
-          2
-        ),
-        _vm._v(" "),
-        _c(
-          "VueGroup",
-          {
-            staticClass: "vertical",
-            model: {
-              value: _vm.valueModel,
-              callback: function($$v) {
-                _vm.valueModel = $$v;
-              },
-              expression: "valueModel"
-            }
-          },
-          [_vm._t("default")],
-          2
-        )
-      ],
-      2
-    )
-  };
-  var __vue_staticRenderFns__$c = [];
-  __vue_render__$c._withStripped = true;
-
-    /* style */
-    const __vue_inject_styles__$i = undefined;
-    /* scoped */
-    const __vue_scope_id__$i = undefined;
-    /* module identifier */
-    const __vue_module_identifier__$i = undefined;
-    /* functional template */
-    const __vue_is_functional_template__$i = false;
-    /* style inject */
-    
-    /* style inject SSR */
-    
-
-    
-    var $0_12 = normalizeComponent_1$1(
-      { render: __vue_render__$c, staticRenderFns: __vue_staticRenderFns__$c },
-      __vue_inject_styles__$i,
-      __vue_script__$i,
-      __vue_scope_id__$i,
-      __vue_is_functional_template__$i,
-      __vue_module_identifier__$i,
-      undefined,
-      undefined
-    );
-
-  //
-  var script$j = {
-    name: 'VueSelectButton',
-    extends: $0_3,
-    inject: ['VueSelect'],
-    props: {
-      selectLabel: {
-        type: String,
-        default: null
-      }
-    },
-    mounted: function mounted() {
-      this.onSelect(this.$refs.groupButton.selected);
-    },
-    methods: {
-      onSelect: function onSelect(selected) {
-        if (selected) {
-          this.VueSelect.setCurrentChild(this);
-        }
-      }
-    }
-  };
-
-  /* script */
-  const __vue_script__$j = script$j;
-  /* template */
-  var __vue_render__$d = function() {
-    var _vm = this;
-    var _h = _vm.$createElement;
-    var _c = _vm._self._c || _h;
-    return _c(
-      "VueGroupButton",
-      _vm._g(
-        _vm._b(
-          {
-            directives: [
-              {
-                name: "close-popper",
-                rawName: "v-close-popper",
-                value: !_vm.keepOpen,
-                expression: "!keepOpen"
-              }
-            ],
-            ref: "groupButton",
-            staticClass: "vue-ui-select-button",
-            attrs: { flat: "" },
-            on: { selected: _vm.onSelect }
-          },
-          "VueGroupButton",
-          _vm.$attrs,
-          false
-        ),
-        _vm.$listeners
-      ),
-      [_vm._t("default")],
-      2
-    )
-  };
-  var __vue_staticRenderFns__$d = [];
-  __vue_render__$d._withStripped = true;
-
-    /* style */
-    const __vue_inject_styles__$j = undefined;
-    /* scoped */
-    const __vue_scope_id__$j = undefined;
-    /* module identifier */
-    const __vue_module_identifier__$j = undefined;
-    /* functional template */
-    const __vue_is_functional_template__$j = false;
-    /* style inject */
-    
-    /* style inject SSR */
-    
-
-    
-    var $0_13 = normalizeComponent_1$1(
-      { render: __vue_render__$d, staticRenderFns: __vue_staticRenderFns__$d },
-      __vue_inject_styles__$j,
-      __vue_script__$j,
-      __vue_scope_id__$j,
-      __vue_is_functional_template__$j,
-      __vue_module_identifier__$j,
-      undefined,
-      undefined
-    );
-
-  //
-  var script$k = {
-    name: 'VueSwitch',
-    model: {
-      event: 'update'
-    },
-    mixins: [DisabledChild],
-    props: {
-      icon: {
-        type: String,
-        default: null
-      },
-      value: {}
-    },
-    data: function data() {
-      return {
-        focused: false
-      };
-    },
-    computed: {
-      valueModel: {
-        get: function get() {
-          return this.value;
-        },
-        set: function set(value) {
-          this.$emit('update', value);
-        }
-      }
-    },
-    methods: {
-      toggleValue: function toggleValue() {
-        if (this.finalDisabled) return;
-        this.valueModel = !this.valueModel;
-      }
-    }
-  };
-
-  /* script */
-  const __vue_script__$k = script$k;
-  /* template */
-  var __vue_render__$e = function() {
-    var _vm = this;
-    var _h = _vm.$createElement;
-    var _c = _vm._self._c || _h;
-    return _c(
-      "div",
-      {
-        staticClass: "vue-ui-switch",
-        class: {
-          selected: _vm.value,
-          disabled: _vm.finalDisabled,
-          focus: _vm.focused
-        },
-        attrs: {
-          tabindex: _vm.disabled ? -1 : 0,
-          role: "checkbox",
-          "aria-disabled": _vm.disabled,
-          "aria-checked": !!_vm.value
-        },
-        on: {
-          click: _vm.toggleValue,
-          keydown: [
-            function($event) {
-              if (
-                !$event.type.indexOf("key") &&
-                _vm._k($event.keyCode, "enter", 13, $event.key, "Enter")
-              ) {
-                return null
-              }
-              _vm.focused = true;
-              _vm.toggleValue($event);
-            },
-            function($event) {
-              if (
-                !$event.type.indexOf("key") &&
-                _vm._k($event.keyCode, "space", 32, $event.key, [" ", "Spacebar"])
-              ) {
-                return null
-              }
-              _vm.focused = true;
-              _vm.toggleValue($event);
-            }
-          ],
-          blur: function($event) {
-            _vm.focused = false;
-          }
-        }
-      },
-      [
-        _c(
-          "div",
-          { staticClass: "content" },
-          [
-            _vm.icon ? _c("VueIcon", { attrs: { icon: _vm.icon } }) : _vm._e(),
-            _vm._v(" "),
-            _c("span", { staticClass: "slot" }, [_vm._t("default")], 2),
-            _vm._v(" "),
-            _vm._m(0)
-          ],
-          1
-        )
-      ]
-    )
-  };
-  var __vue_staticRenderFns__$e = [
-    function() {
-      var _vm = this;
-      var _h = _vm.$createElement;
-      var _c = _vm._self._c || _h;
-      return _c("div", { staticClass: "wrapper" }, [
-        _c("div", { staticClass: "bullet" })
-      ])
-    }
-  ];
-  __vue_render__$e._withStripped = true;
-
-    /* style */
-    const __vue_inject_styles__$k = undefined;
-    /* scoped */
-    const __vue_scope_id__$k = undefined;
-    /* module identifier */
-    const __vue_module_identifier__$k = undefined;
-    /* functional template */
-    const __vue_is_functional_template__$k = false;
-    /* style inject */
-    
-    /* style inject SSR */
-    
-
-    
-    var $0_14 = normalizeComponent_1$1(
-      { render: __vue_render__$e, staticRenderFns: __vue_staticRenderFns__$e },
-      __vue_inject_styles__$k,
-      __vue_script__$k,
-      __vue_scope_id__$k,
-      __vue_is_functional_template__$k,
-      __vue_module_identifier__$k,
-      undefined,
-      undefined
-    );
-
-  //
-  var script$l = {
-    name: 'VueTab',
-    components: {
-      NoTransition: {
-        functional: true,
-        render: function render(h, _ref) {
-          var slots = _ref.slots;
-          return slots().default[0];
-        }
-      }
-    },
-    mixins: [CoupledChild('VueTabsCoupling')],
-    inject: ['VueTabs'],
-    props: {
-      icon: {
-        type: String,
-        default: null
-      },
-      id: {
-        type: [String, Number],
-        required: true
-      },
-      label: {
-        type: String,
-        default: ''
-      },
-      lazy: {
-        type: Boolean,
-        default: false
-      },
-      disabled: {
-        type: Boolean,
-        default: false
-      }
-    },
-    computed: {
-      contentShown: function contentShown() {
-        return !this.lazy || this.showContent;
-      }
-    },
-    data: function data() {
-      return {
-        showContent: false
-      };
-    },
-    watch: {
-      active: function active(value, oldValue) {
-        // Lazy content creation
-        if (value && value !== oldValue && !this.showContent) {
-          this.showContent = true;
-        }
-      }
-    }
-  };
-
-  /* script */
-  const __vue_script__$l = script$l;
-  /* template */
-  var __vue_render__$f = function() {
-    var _vm = this;
-    var _h = _vm.$createElement;
-    var _c = _vm._self._c || _h;
-    return _c(
-      _vm.VueTabs.data.animate ? "transition" : "NoTransition",
-      { tag: "component", attrs: { name: "vue-ui-tab" } },
-      [
-        _c(
-          "div",
-          {
-            directives: [
-              {
-                name: "show",
-                rawName: "v-show",
-                value: _vm.active,
-                expression: "active"
-              }
-            ],
-            staticClass: "vue-ui-tab",
-            class: {
-              selected: _vm.active
-            },
-            attrs: {
-              role: "tabpanel",
-              tabindex: _vm.active ? "0" : null,
-              "aria-hidden": !_vm.active ? "true" : null
-            }
-          },
-          [
-            _vm.contentShown
-              ? _c(
-                  "div",
-                  { staticClass: "vue-ui-tab-content" },
-                  [_vm._t("default")],
-                  2
-                )
-              : _vm._e()
-          ]
-        )
-      ]
-    )
-  };
-  var __vue_staticRenderFns__$f = [];
-  __vue_render__$f._withStripped = true;
-
-    /* style */
-    const __vue_inject_styles__$l = undefined;
-    /* scoped */
-    const __vue_scope_id__$l = undefined;
-    /* module identifier */
-    const __vue_module_identifier__$l = undefined;
-    /* functional template */
-    const __vue_is_functional_template__$l = false;
-    /* style inject */
-    
-    /* style inject SSR */
-    
-
-    
-    var $0_15 = normalizeComponent_1$1(
-      { render: __vue_render__$f, staticRenderFns: __vue_staticRenderFns__$f },
-      __vue_inject_styles__$l,
-      __vue_script__$l,
-      __vue_scope_id__$l,
-      __vue_is_functional_template__$l,
-      __vue_module_identifier__$l,
-      undefined,
-      undefined
-    );
-
-  //
-  var script$m = {
-    name: 'VueTabs',
-    mixins: [CoupledParent('VueTabsCoupling')],
-    components: {
-      TabButtonContent: {
-        functional: true,
-        props: {
-          tab: {
-            required: true
-          }
-        },
-        render: function render(h, _ref) {
-          var props = _ref.props;
-          var tab = props.tab;
-          return tab.$slots.button;
-        }
-      }
-    },
-    provide: function provide() {
-      return {
-        VueTabs: {
-          data: this.injectedData
-        }
-      };
-    },
-    props: {
-      animate: {
-        type: Boolean,
-        default: false
-      },
-      groupClass: {
-        type: [String, Array, Object],
-        default: 'primary'
-      },
-      groupNoIndicator: {
-        type: Boolean,
-        default: false
-      },
-      tabClass: {
-        type: [String, Array, Object],
-        default: 'flat big'
-      },
-      tabId: {
-        type: [String, Number],
-        default: null
-      }
-    },
-    data: function data() {
-      return {
-        currentTabId: this.tabId,
-        direction: 'to-right',
-        injectedData: {
-          animate: this.animate
-        }
-      };
-    },
-    watch: {
-      animate: function animate(value, oldValue) {
-        if (value !== oldValue) {
-          this.injectedData.animate = value;
-        }
-      },
-      currentTabId: function currentTabId(value, oldValue) {
-        if (value !== oldValue) {
-          var index = this.findTabIndex(value);
-
-          if (index !== -1 && index !== this.activeChildIndex) {
-            this.activateChild(index, true);
-          }
-
-          if (value !== this.tabId) {
-            this.$emit('update:tabId', value);
-          }
-        }
-      },
-      tabId: function tabId(value, oldValue) {
-        if (value !== oldValue && value !== this.currentTabId) {
-          this.currentTabId = value;
-        }
-      }
-    },
-    methods: {
-      childActivated: function childActivated(index, oldIndex, external) {
-        var _this = this;
-
-        var tab = this.children[index];
-
-        if (tab && tab.id !== this.currentTabId) {
-          this.currentTabId = tab.id;
-        }
-
-        this.direction = index === oldIndex ? '' : index < oldIndex ? 'to-left' : 'to-right';
-
-        if (!external) {
-          this.$nextTick(function () {
-            var item = _this.$refs.tabButtons[index];
-
-            if (item) {
-              item.$el.focus();
-            }
-          });
-        }
-      },
-      findTabIndex: function findTabIndex(id) {
-        return this.children.findIndex(function (c) {
-          return c.id === id;
-        });
-      }
-    }
-  };
-
-  /* script */
-  const __vue_script__$m = script$m;
-  /* template */
-  var __vue_render__$g = function() {
-    var _vm = this;
-    var _h = _vm.$createElement;
-    var _c = _vm._self._c || _h;
-    return _c(
-      "div",
-      {
-        staticClass: "vue-ui-tabs",
-        class: [
-          "direction-" + _vm.direction,
-          {
-            animate: _vm.animate
-          }
-        ]
-      },
-      [
-        _c(
-          "VueGroup",
-          {
-            staticClass: "tabs",
-            class: _vm.groupClass,
-            attrs: { indicator: !_vm.groupNoIndicator },
-            model: {
-              value: _vm.currentTabId,
-              callback: function($$v) {
-                _vm.currentTabId = $$v;
-              },
-              expression: "currentTabId"
-            }
-          },
-          _vm._l(_vm.children, function(tab, index) {
-            return _c(
-              "VueGroupButton",
-              {
-                key: tab.id,
-                ref: "tabButtons",
-                refInFor: true,
-                staticClass: "tab-button",
-                class: _vm.tabClass,
-                attrs: {
-                  value: tab.id,
-                  label: tab.label,
-                  "icon-left": tab.icon,
-                  disabled: tab.disabled,
-                  role: "tab",
-                  tabindex: "0",
-                  "aria-controls": "tab-" + index
-                },
-                nativeOn: {
-                  keyup: [
-                    function($event) {
-                      if (
-                        !$event.type.indexOf("key") &&
-                        _vm._k($event.keyCode, "left", 37, $event.key, [
-                          "Left",
-                          "ArrowLeft"
-                        ])
-                      ) {
-                        return null
-                      }
-                      if ("button" in $event && $event.button !== 0) {
-                        return null
-                      }
-                      return _vm.activateChild(index - 1)
-                    },
-                    function($event) {
-                      if (
-                        !$event.type.indexOf("key") &&
-                        _vm._k($event.keyCode, "right", 39, $event.key, [
-                          "Right",
-                          "ArrowRight"
-                        ])
-                      ) {
-                        return null
-                      }
-                      if ("button" in $event && $event.button !== 2) {
-                        return null
-                      }
-                      return _vm.activateChild(index + 1)
-                    }
-                  ]
-                }
-              },
-              [_c("TabButtonContent", { attrs: { tab: tab } })],
-              1
-            )
-          }),
-          1
-        ),
-        _vm._v(" "),
-        _c("div", { staticClass: "tabs-content" }, [_vm._t("default")], 2)
-      ],
-      1
-    )
-  };
-  var __vue_staticRenderFns__$g = [];
-  __vue_render__$g._withStripped = true;
-
-    /* style */
-    const __vue_inject_styles__$m = undefined;
-    /* scoped */
-    const __vue_scope_id__$m = undefined;
-    /* module identifier */
-    const __vue_module_identifier__$m = undefined;
-    /* functional template */
-    const __vue_is_functional_template__$m = false;
-    /* style inject */
-    
-    /* style inject SSR */
-    
-
-    
-    var $0_16 = normalizeComponent_1$1(
-      { render: __vue_render__$g, staticRenderFns: __vue_staticRenderFns__$g },
-      __vue_inject_styles__$m,
-      __vue_script__$m,
-      __vue_scope_id__$m,
-      __vue_is_functional_template__$m,
-      __vue_module_identifier__$m,
-      undefined,
-      undefined
-    );
-
-  //
-  //
-  //
-  //
-  //
-  //
-  //
-  //
-  //
-  //
-  //
-  //
-  //
-  //
-  //
-  //
-  //
-  //
-  //
-  //
-  //
-  //
-  //
-  //
-  //
-  //
-  //
-  //
-  //
-  //
-  //
-  //
-  //
-  //
-  //
-  //
-  var script$n = {
-    name: 'VueTypeAhead',
-    inheritAttrs: false,
-    model: {
-      event: 'udpate'
-    },
-    props: {
-      loading: {
-        type: Boolean,
-        default: false
-      },
-      restrictChoice: {
-        type: Boolean,
-        default: false
-      },
-      showAll: {
-        type: Boolean,
-        default: false
-      },
-      showMax: {
-        type: [String, Number],
-        default: 10
-      },
-      suggestions: {
-        type: Array,
-        required: true
-      },
-      value: {
-        default: ''
-      }
-    },
-    data: function data() {
-      return {
-        directSelect: false,
-        dirty: false,
-        focused: false,
-        open: false,
-        tempValue: this.value,
-        lastSuggestions: this.suggestions
-      };
-    },
-    computed: {
-      filteredSuggestions: function filteredSuggestions() {
-        var value = this.tempValue;
-
-        if (value) {
-          return this.suggestions.filter(function (s) {
-            return s.value && s.value.startsWith(value);
-          });
-        } else if (this.showAll) {
-          return this.suggestions;
-        } else {
-          return [];
-        }
-      },
-      finalOpen: function finalOpen() {
-        return !!(this.open && this.shownSuggestions.length && (this.shownSuggestions.length !== 1 || this.shownSuggestions[0].value !== this.value));
-      },
-      shownSuggestions: function shownSuggestions() {
-        if (this.open) {
-          return this.filteredSuggestions;
-        } else {
-          return this.lastSuggestions;
-        }
-      },
-      suggestion: function suggestion() {
-        if (this.shownSuggestions.length) {
-          return this.shownSuggestions[0].value;
-        }
-      },
-      tempValueModel: {
-        get: function get() {
-          return this.tempValue;
-        },
-        set: function set(value) {
-          this.tempValue = value;
-          this.dirty = true;
-
-          if (value && !this.open) {
-            this.showSuggestions();
-          }
-        }
-      },
-      valueModel: {
-        get: function get() {
-          return this.value;
-        },
-        set: function set(value) {
-          this.directSelect = true;
-          this.tempValue = value;
-          this.$emit('update', value);
-        }
-      }
-    },
-    watch: {
-      filteredSuggestions: function filteredSuggestions(value) {
-        if (this.open) {
-          this.lastSuggestions = value;
-        }
-      },
-      value: function value(_value, oldValue) {
-        if (_value !== oldValue && _value !== this.tempValue) {
-          this.tempValue = _value;
-        }
-      }
-    },
-    methods: {
-      getFinalChoice: function getFinalChoice(value) {
-        if (this.restrictChoice) {
-          if (this.suggestions.find(function (s) {
-            return s.value === value;
-          })) {
-            return value;
-          } else {
-            return '';
-          }
-        } else {
-          return value;
-        }
-      },
-      onBlur: function onBlur() {
-        var _this = this;
-
-        this.$nextTick(function () {
-          if (!_this.$_popoverMousedown) {
-            _this.focused = false;
-            _this.open = false;
-
-            if (!_this.directSelect) {
-              // Get final value depending on restrictChoice
-              var value = _this.getFinalChoice(_this.tempValue); // Reset to initial value
-
-
-              if (_this.restrictChoice && !value) {
-                value = _this.getFinalChoice(_this.value);
-              } // Emit new value
-
-
-              if (_this.dirty && value !== _this.value) {
-                _this.$emit('update', value); // Reset temp value
-
-
-                _this.tempValue = value;
-              } else {
-                // Reset temp value
-                _this.tempValue = _this.value;
-              }
-            }
-          }
-        });
-      },
-      onFocus: function onFocus() {
-        this.focused = true;
-        this.directSelect = false;
-        this.dirty = false;
-        this.tempValue = '';
-        this.$_popoverMousedown = false; // Suggestions
-
-        if (this.value || this.showAll) {
-          this.showSuggestions();
-        }
-      },
-      onPopoverContentMousedown: function onPopoverContentMousedown(event) {
-        this.$_popoverMousedown = true;
-      },
-      onPopoverContentMouseup: function onPopoverContentMouseup(event) {
-        var _this2 = this;
-
-        this.$_popoverMousedown = false;
-        setTimeout(function () {
-          _this2.onBlur();
-        }, 100);
-      },
-      showSuggestions: function showSuggestions() {
-        this.open = true;
-      }
-    }
-  };
-
-  /* script */
-  const __vue_script__$n = script$n;
-  /* template */
-  var __vue_render__$h = function() {
-    var _vm = this;
-    var _h = _vm.$createElement;
-    var _c = _vm._self._c || _h;
-    return _c(
-      "div",
-      { staticClass: "vue-ui-type-ahead" },
-      [
-        _c(
-          "VueSelect",
-          {
-            attrs: {
-              open: _vm.finalOpen,
-              trigger: "manual",
-              "auto-hide": !_vm.focused,
-              "no-popover-focus": ""
-            },
-            on: {
-              "update:open": function(val) {
-                return (_vm.open = val)
-              },
-              "popover-mousedown": _vm.onPopoverContentMousedown,
-              "popover-mouseup": _vm.onPopoverContentMouseup
-            },
-            model: {
-              value: _vm.valueModel,
-              callback: function($$v) {
-                _vm.valueModel = $$v;
-              },
-              expression: "valueModel"
-            }
-          },
-          [
-            _c(
-              "VueInput",
-              _vm._b(
-                {
-                  attrs: {
-                    slot: "trigger",
-                    "loading-right": _vm.loading,
-                    suggestion: _vm.suggestion
-                  },
-                  on: { focus: _vm.onFocus, blur: _vm.onBlur },
-                  slot: "trigger",
-                  model: {
-                    value: _vm.tempValueModel,
-                    callback: function($$v) {
-                      _vm.tempValueModel = $$v;
-                    },
-                    expression: "tempValueModel"
-                  }
-                },
-                "VueInput",
-                _vm.$attrs,
-                false
-              )
-            ),
-            _vm._v(" "),
-            _vm.shownSuggestions.length
-              ? _vm._l(_vm.shownSuggestions.slice(0, _vm.showMax), function(
-                  suggestion,
-                  index
-                ) {
-                  return _c(
-                    "VueSelectButton",
-                    {
-                      key: index,
-                      attrs: {
-                        "icon-left": suggestion.icon,
-                        value: suggestion.value
-                      }
-                    },
-                    [_vm._v("\n        " + _vm._s(suggestion.value) + "\n      ")]
-                  )
-                })
-              : _vm._e()
-          ],
-          2
-        )
-      ],
-      1
-    )
-  };
-  var __vue_staticRenderFns__$h = [];
-  __vue_render__$h._withStripped = true;
-
-    /* style */
-    const __vue_inject_styles__$n = undefined;
-    /* scoped */
-    const __vue_scope_id__$n = undefined;
-    /* module identifier */
-    const __vue_module_identifier__$n = undefined;
-    /* functional template */
-    const __vue_is_functional_template__$n = false;
-    /* style inject */
-    
-    /* style inject SSR */
-    
-
-    
-    var $0_17 = normalizeComponent_1$1(
-      { render: __vue_render__$h, staticRenderFns: __vue_staticRenderFns__$h },
-      __vue_inject_styles__$n,
-      __vue_script__$n,
-      __vue_scope_id__$n,
-      __vue_is_functional_template__$n,
-      __vue_module_identifier__$n,
-      undefined,
-      undefined
-    );
-
   var components = 
     (function() {
       var map = {
-        './VueButton.vue': $0_0,
-  './VueDisable.vue': $0_1,
-  './VueDropdown.vue': $0_2,
-  './VueDropdownButton.vue': $0_3,
-  './VueFormField.vue': $0_4,
-  './VueGroup.vue': $0_5,
-  './VueGroupButton.vue': $0_6,
-  './VueIcon.vue': $0_7,
-  './VueInput.vue': $0_8,
-  './VueLoadingBar.vue': $0_9,
-  './VueLoadingIndicator.vue': $0_10,
-  './VueModal.vue': $0_11,
-  './VueSelect.vue': $0_12,
-  './VueSelectButton.vue': $0_13,
-  './VueSwitch.vue': $0_14,
-  './VueTab.vue': $0_15,
-  './VueTabs.vue': $0_16,
-  './VueTypeAhead.vue': $0_17,
+        './Favourite/Favourite.vue': $0_0,
+  './Header/Header.vue': $0_1,
+  './SearchBar/SearchBar.vue': $0_2,
+  './SearchCard/SearchCard.vue': $0_3,
 
       };
       var req = function req(key) {
