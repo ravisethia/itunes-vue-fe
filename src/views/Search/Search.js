@@ -27,7 +27,7 @@ export default {
   },
   updated () {
     /* Updating the view and active state based on changes to data */
-    var elems = document.querySelectorAll('.favourite-icon')
+    var elems = document.querySelectorAll('.fav-icon')
     const storedArray = JSON.parse(localStorage.getItem('favourites'))
     for (var i = 0; i < elems.length; i++) {
       for (var j = 0; j < storedArray.length; j++) {
