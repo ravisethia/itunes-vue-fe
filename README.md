@@ -42,17 +42,17 @@ For Mac/Windows
 $ npm run serve
 ```
 
-# Build for production with minification
+### Build for production with minification
 
 ```bash
 $ npm run build
 ```
-# Lint Checks
+### Lint Checks
 
 ```bash
-npm run lint
+$ npm run lint
 ```
 
-# End point changes
+### End point changes
 
 - currently the endpoint (under ./src/views/Search/Search.js) is referring to heroku hosted app. It needs to be updated to localhost:port if the express server is run locally.
