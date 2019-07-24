@@ -1,7 +1,6 @@
 import Vue from 'vue'
 import App from './App.vue'
 import router from './router'
-import store from './store'
 import VueUiFramework from '../'
 import '../dist/vue-ui.css'
 import '../dist/font-awesome.min.css'
@@ -17,6 +16,5 @@ Vue.prototype.log = (...args) => {
 
 new Vue({
   router,
-  store,
   ...App,
 }).$mount('#app')
